@@ -18,3 +18,25 @@ body {
 .post .post-content-header {
   font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans JP', "Helvetica Neue", YuGothic, "ヒラギノ角ゴ ProN W3", Hiragino Kaku Gothic ProN, Arial, "メイリオ", Meiryo, sans-serif !important;
 }
+
+@media screen and (max-width: 1080px) {
+    .head-toc {
+        display: none;
+    }
+}
+
+.head-toc {
+  margin: 0 auto;
+  padding: 3px;
+  font-size: 0.8rem;
+  background-color: #f2f2f2;
+}
+
+.head-toc ul {
+  list-style-type: none;
+  line-height: 2.3em;
+}
+
+.head-toc li a {
+    border-bottom: dotted 2px gray;
+}
