@@ -1,8 +1,7 @@
 ---
 title: "Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する"
-date: 2018-10-02T16:01:23+08:00
-lastmod: 2018-10-03T16:01:23+08:00
-draft: false
+date: 2018-10-04T16:01:23+08:00
+lastmod: 2018-10-04T16:01:23+08:00
 tags: ["kafka", "openshift", "kubernetes"]
 categories: ["Technology"]
 comment: true
@@ -87,7 +86,7 @@ $ minishift start --memory=6GB
 $ oc login -u system:admin
 ```
 
-これ以降の手順ではclusterスコープのCRDを設定したりする関係上、`cluster-admin`権限が必要なので、とりあえず`system:admin`でログインしておきます。
+これ以降の手順ではclusterスコープの[CRD](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/)を設定したりする関係上、`cluster-admin`権限が必要なので、とりあえず`system:admin`でログインしておきます。
 
 ### strimziのダウンロード
 
@@ -98,7 +97,6 @@ https://github.com/strimzi/strimzi-kafka-operator/releases
 ### strimziのCluster Operatorをインストールする
 
 Kafkaのクラスタをインストール、設定してくれる、strimziの`Cluster Operator`をインストールします。
-
 ```bash
 $ oc new-project kafka-op # Cluster Operatorをインストールするproject(namespace)を作成する
 $ cd strimzi-0.7/ # ダウンロードしたstrimziを解凍した先に移動
@@ -113,9 +111,9 @@ $ oc apply -f examples/templates/cluster-operator -n kafka-op
 
 Cluster Operatorがインストールされれば、それを使ってKafkaのクラスタをインストールできます。
 
-Cluster Operatorは、project(namespace)内のイベントを監視しており、ここに`Kafka`(CRD)を作成することでKafkaのクラスタをインストール、設定してくれます。
+Cluster Operatorは、project(namespace)内のイベントを監視しており、ここに`Kafka`(CR, [Custom Resource](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#create-custom-objects))を作成することでKafkaのクラスタをインストール、設定してくれます。
 
-`Kafka`(CRD)は、yamlの例が「examples/kafka」に格納されています。
+`Kafka`(CR)は、yamlの例が「examples/kafka」に格納されています。
 
 examples/kafka/kafka-ephemeral.yaml
 : 永続ストレージを割り当てない揮発性のKafkaクラスタ(検証用)
@@ -123,7 +121,7 @@ examples/kafka/kafka-ephemeral.yaml
 examples/kafka/kafka-persistent.yaml
 : 永続ストレージを割り当てたKafkaクラスタ
 
-今回は、検証用にephemeralなほうをインストールします。`Kafka`CRDは以下のような形式です。
+今回は、検証用にephemeralなほうをインストールします。`Kafka`CRは以下のような形式です。
 
 ```yaml
 apiVersion: kafka.strimzi.io/v1alpha1
@@ -144,7 +142,7 @@ spec:
       timeoutSeconds: 5
 ```
 
-なんとなく、どんなクラスタができるか想像できますね。このCRDをKubernetes上に作成します。
+なんとなく、どんなクラスタができるか想像できますね。このCRをKubernetes上に作成します。
 
 ```sh
 $ oc apply -f examples/kafka/kafka-ephemeral.yaml
@@ -178,7 +176,7 @@ strimziは、Kafkaクラスタそのものを保守するCluster Operator以外�
 
 Topic Operatorは、上記手順でインストールされた「my-cluster-entity-operator-xxxx」(Entity Operator)にあるので、すでに使える状態になっています。
 
-さっそくTopic OperatorでKafkaクラスタ上にtopicを作成してみます。「examples/topic/kafka-topic.yaml」に例がありますが、以下のようなKafkaTopicというCRDを作成することでTopic OperatorがKafkaクラスタ上にtopicを作成してくれます。
+さっそくTopic OperatorでKafkaクラスタ上にtopicを作成してみます。「examples/topic/kafka-topic.yaml」に例がありますが、以下のようなKafkaTopicというCRを作成することでTopic OperatorがKafkaクラスタ上にtopicを作成してくれます。
 
 ```yaml
 apiVersion: kafka.strimzi.io/v1alpha1
