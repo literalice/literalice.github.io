@@ -1,0 +1,88 @@
+# This is a simple configuration.
+# If you want to see the full configuration, please check `full-config.toml` .
+# And see https://gohugo.io/getting-started/configuration/ .
+
+baseURL = "http://localhost:1313/"
+title = "literalice"
+enableRobotsTXT = true
+enableEmoji = true
+theme = "jane"
+
+hasCJKLanguage = true
+paginate = 3
+rssLimit = 20
+disqusShortname = "literalice"      # disqus_shortname
+googleAnalytics = ""      # UA-XXXXXXXX-X
+copyright = ""
+
+pygmentsCodefences = true
+pygmentsUseClasses = true
+pygmentsOptions = "linenos=table"
+
+# language support # en / zh-cn / other... translations present in i18n/
+defaultContentLanguage = "ja"           # Default language to use
+[languages.en]
+  languageCode = "en"
+
+[languages.ja]
+  languageCode = "ja"
+
+[author]
+  name = "Masatoshi Hayashi"
+
+[sitemap]
+  changefreq = "weekly"
+  priority = 0.5
+  filename = "sitemap.xml"
+
+[[menu.main]]
+  name = "Home"
+  weight = 10
+  identifier = "home"
+  url = "/"
+[[menu.main]]
+  name = "Archives"
+  weight = 20
+  identifier = "archives"
+  url = "/post/"
+[[menu.main]]
+  name = "Tags"
+  weight = 30
+  identifier = "tags"
+  url = "/tags/"
+[[menu.main]]
+  name = "Categories"
+  weight = 40
+  identifier = "categories"
+  url = "/categories/"
+[[menu.main]]
+  name = "Source"
+  weight = 50
+  url = "https://github.com/literalice"
+
+
+[params]
+  since = "2018"
+  homeFullContent = false
+  rssFullContent = true
+
+  # site info (optional)
+  keywords = ["Technology"]
+  description = "Technology info blog by literalice"
+
+  # The date format to use; for a list of valid formats, see https://gohugo.io/functions/format/
+  dateFormatToUse = "2006-01-02"
+
+  toc = true
+  photoswipe = true
+  contentCopyright = '<a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a>'
+
+  # Link custom CSS and JS assets
+  #   (relative to /static/css and /static/js respectively)
+  customCSS = ['custom.css']            # if ['custom.css'], load '/static/css/custom.css' file
+  customJS = []             # if ['custom.js'], load '/static/js/custom.js' file
+
+  [params.social]
+    a-email = "mailto:literalice@monochromeroad.com"
+    g-github = "https://github.com/literalice"
+    c-twitter = "https://twitter.com/literalice"
