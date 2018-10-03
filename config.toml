@@ -2,11 +2,12 @@
 # If you want to see the full configuration, please check `full-config.toml` .
 # And see https://gohugo.io/getting-started/configuration/ .
 
-baseURL = "http://localhost:1313/"
+baseURL = "https://blog.literalice.com/"
 title = "literalice"
 enableRobotsTXT = true
 enableEmoji = true
 theme = "jane"
+publishDir = "docs"
 
 hasCJKLanguage = true
 paginate = 3
