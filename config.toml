@@ -13,7 +13,7 @@ hasCJKLanguage = true
 paginate = 3
 rssLimit = 20
 disqusShortname = "literalice"      # disqus_shortname
-googleAnalytics = ""      # UA-XXXXXXXX-X
+googleAnalytics = "UA-126957505-1"      # UA-XXXXXXXX-X
 copyright = ""
 
 pygmentsCodefences = true
