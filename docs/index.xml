@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>literalice</title>
+    <link>https://literalice.com/</link>
+    <description>Recent content on literalice</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Thu, 04 Oct 2018 16:01:23 +0800</lastBuildDate>
+    
+        <atom:link href="https://literalice.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する</title>
+      <link>https://literalice.com/post/strimzi/</link>
+      <pubDate>Thu, 04 Oct 2018 16:01:23 +0800</pubDate>
+      
+      <guid>https://literalice.com/post/strimzi/</guid>
+      
+        <description>
+
+
+&lt;link rel=&#34;stylesheet&#34; href=&#34;https://literalice.com/css/hugo-easy-gallery.css&#34; /&gt;
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/strimzi_logo.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/strimzi_logo.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;h2 id=&#34;kafkaとkubernetes&#34;&gt;KafkaとKubernetes&lt;/h2&gt;
+
+&lt;p&gt;メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもその重要性は大きくなっています。&lt;br /&gt;
+マイクロサービス間の非同期な連携とか、イベントソーシングなアプリのイベントストア、分散システムのログ集約などなど様々ですね。&lt;/p&gt;
+
+&lt;p&gt;Kubernetes上でマイクロサービスを作成する場合も、kubernetesクラスタ上にKafkaをインストールしてサクッと使ってみたいものです。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://cdn-images-1.medium.com/max/1600/1*s0jqmRff9avwTrfQPHfeeg.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://cdn-images-1.medium.com/max/1600/1*s0jqmRff9avwTrfQPHfeeg.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;a href=&#34;https://medium.com/@ulymarins/an-introduction-to-apache-kafka-and-microservices-communication-bf0a0966d63&#34;&gt;https://medium.com/@ulymarins/an-introduction-to-apache-kafka-and-microservices-communication-bf0a0966d63&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;しかしKafkaは、Kafkaのプロセスだけでなくzookeeperのクラスタも構築して保守してやる必要があったり、そもそもステートフルだったりで、kubernetes上でデプロイ、保守するのはとても敷居が高いものでした。&lt;/p&gt;
+
+&lt;p&gt;そこを解決するのが&lt;a href=&#34;http://strimzi.io/&#34;&gt;strimzi&lt;/a&gt;というOSSです。&lt;/p&gt;
+
+&lt;p&gt;strimziは、&lt;code&gt;operator&lt;/code&gt;という仕組みでkubernetes上のKafkaクラスタの管理を大幅に省力化します。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;operator&lt;/code&gt;に関しては、 &lt;a href=&#34;https://pocketstudio.net/2016/11/10/introducing-operators-translate-jp/&#34;&gt;https://pocketstudio.net/2016/11/10/introducing-operators-translate-jp/&lt;/a&gt; あたりが参考になります。&lt;br /&gt;
+その実体は、 &lt;strong&gt;Kubernetesにデプロイされたコンテナ&lt;/strong&gt; です。&lt;br /&gt;
+KubernetesのAPIでイベントを監視して、コンテナをデプロイしたり設定したりバックアップしたりといった保守作業を行うコンテナのことを&lt;code&gt;operator&lt;/code&gt;と呼びます。&lt;/p&gt;
+
+&lt;p&gt;strimziでは、以下3つの&lt;code&gt;operator&lt;/code&gt;を提供しています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://strimzi.io/docs/0.7.0/#cluster-operator-str&#34;&gt;Cluster Operator&lt;/a&gt;&lt;br /&gt;
+&lt;code&gt;Kafka&lt;/code&gt;というCustom Resourceの状態を監視して、zookeeperやKafkaのデプロイ、設定、保守を行う&lt;br /&gt;
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/strimzi_cluster_operator.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/strimzi_cluster_operator.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+      &lt;figcaption&gt;&lt;h4&gt;Strimzi Cluster Operator&lt;/h4&gt;
+      &lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://strimzi.io/docs/0.7.0/#assembly-getting-started-topic-operator-str&#34;&gt;Topic Operator&lt;/a&gt;&lt;br /&gt;
+KafkaTopicというCustom Resourceの状態を監視して、Cluster Operatorが保守しているKafka上にtopicを作成したり削除したり設定変更したりする&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://strimzi.io/docs/0.7.0/#assembly-getting-started-user-operator-str&#34;&gt;User Operator&lt;/a&gt;&lt;br /&gt;
+KafkaUserというCustom Resourceの状態を監視して、Kafkaのユーザーを管理する&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;つまり、strimziを使うと、以下のようなyamlを、&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kafka.strimzi.io/v1alpha1&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Kafka&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;my-cluster&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;kafka&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;replicas&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;listeners&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;plain&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;tls&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;readinessProbe&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;initialDelaySeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;15&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;timeoutSeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;livenessProbe&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;initialDelaySeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;15&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;timeoutSeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# ...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;kubectl -f kafka-cluster.yml&lt;/code&gt;というように適用するだけでkubernetes上にKafkaをプロビジョニングできるということです。便利ですね。&lt;/p&gt;
+
+&lt;p&gt;そういうわけで、さっそくローカルのk8s環境で試してみましょう。&lt;/p&gt;
+
+&lt;h2 id=&#34;minishiftにkafkaをoperatorでインストールする&#34;&gt;minishiftにKafkaをoperatorでインストールする&lt;/h2&gt;
+
+&lt;p&gt;strimziがサポートしているKubernetes環境は、Kubernetes 1.9以上またはOpenShift3.9以上とのことです。&lt;br /&gt;
+&lt;a href=&#34;http://strimzi.io/docs/0.7.0/#getting-started-str&#34;&gt;http://strimzi.io/docs/0.7.0/#getting-started-str&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;今回は、minishiftでローカルにOpenShift環境を立ち上げて試してみます。&lt;/p&gt;
+
+&lt;p&gt;minishiftのインストールはこちらを参照してください。&lt;br /&gt;
+&lt;a href=&#34;https://docs.okd.io/latest/minishift/getting-started/installing.html&#34;&gt;https://docs.okd.io/latest/minishift/getting-started/installing.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;インストールしたら、以下コマンドでローカルにOpenShiftを立ち上げます。&lt;br /&gt;
+何となくメモリたくさん使いそうなので、6GB割り当てるようにしました。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ minishift start --memory&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;6GB
+
+&lt;span class=&#34;c1&#34;&gt;#...
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;
+$ oc login -u system:admin&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これ以降の手順ではclusterスコープの&lt;a href=&#34;https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/&#34;&gt;CRD&lt;/a&gt;を設定したりする関係上、&lt;code&gt;cluster-admin&lt;/code&gt;権限が必要なので、とりあえず&lt;code&gt;system:admin&lt;/code&gt;でログインしておきます。&lt;/p&gt;
+
+&lt;h3 id=&#34;strimziのダウンロード&#34;&gt;strimziのダウンロード&lt;/h3&gt;
+
+&lt;p&gt;strimziをGitHubからダウンロードします。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/strimzi/strimzi-kafka-operator/releases&#34;&gt;https://github.com/strimzi/strimzi-kafka-operator/releases&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;strimziのcluster-operatorをインストールする&#34;&gt;strimziのCluster Operatorをインストールする&lt;/h3&gt;
+
+&lt;p&gt;Kafkaのクラスタをインストール、設定してくれる、strimziの&lt;code&gt;Cluster Operator&lt;/code&gt;をインストールします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;7
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc new-project kafka-op &lt;span class=&#34;c1&#34;&gt;# Cluster Operatorをインストールするproject(namespace)を作成する
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ &lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; strimzi-0.7/ &lt;span class=&#34;c1&#34;&gt;# ダウンロードしたstrimziを解凍した先に移動
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;# Cluster Operatorのデプロイ設定に記載されているプロジェクト名を変更する
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ sed -i &lt;span class=&#34;s1&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; &lt;span class=&#34;s1&#34;&gt;&amp;#39;s/namespace: .*/namespace: kafka-op/&amp;#39;&lt;/span&gt; examples/install/cluster-operator/*RoleBinding*.yaml
+&lt;span class=&#34;c1&#34;&gt;# Cluster Operatorのデプロイ
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ oc apply -f examples/install/cluster-operator -n kafka-op
+$ oc apply -f examples/templates/cluster-operator -n kafka-op&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;cluster-operatorでkafkaのクラスタをインストールする&#34;&gt;Cluster OperatorでKafkaのクラスタをインストールする&lt;/h3&gt;
+
+&lt;p&gt;Cluster Operatorがインストールされれば、それを使ってKafkaのクラスタをインストールできます。&lt;/p&gt;
+
+&lt;p&gt;Cluster Operatorは、project(namespace)内のイベントを監視しており、ここに&lt;code&gt;Kafka&lt;/code&gt;(CR, &lt;a href=&#34;https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#create-custom-objects&#34;&gt;Custom Resource&lt;/a&gt;)を作成することでKafkaのクラスタをインストール、設定してくれます。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Kafka&lt;/code&gt;(CR)は、yamlの例が「examples/kafka」に格納されています。&lt;/p&gt;
+
+&lt;dl&gt;
+&lt;dt&gt;examples/kafka/kafka-ephemeral.yaml&lt;/dt&gt;
+&lt;dd&gt;永続ストレージを割り当てない揮発性のKafkaクラスタ(検証用)&lt;/dd&gt;
+&lt;dt&gt;examples/kafka/kafka-persistent.yaml&lt;/dt&gt;
+&lt;dd&gt;永続ストレージを割り当てたKafkaクラスタ&lt;/dd&gt;
+&lt;/dl&gt;
+
+&lt;p&gt;今回は、検証用にephemeralなほうをインストールします。&lt;code&gt;Kafka&lt;/code&gt;CRは以下のような形式です。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kafka.strimzi.io/v1alpha1&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Kafka&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;my-cluster&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;kafka&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;replicas&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;3&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;listeners&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;plain&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;tls&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;readinessProbe&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;initialDelaySeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;15&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;timeoutSeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;5&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;livenessProbe&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;initialDelaySeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;15&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;timeoutSeconds&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;5&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;なんとなく、どんなクラスタができるか想像できますね。このCRをKubernetes上に作成します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ oc apply -f examples/kafka/kafka-ephemeral.yaml
+$ oc get kafka
+
+NAME           AGE
+my-cluster     14s&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;上記のようにkafkaリソースが作成されたら、Cluster Operatorがkafkaリソースの定義に従ってKafkaのクラスタをセットアップしてくれるので、それを確認します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ oc get pods -w
+
+NAME                                          READY     STATUS    RESTARTS   AGE
+my-cluster-entity-operator-54758cf6f6-nvcqm   &lt;span class=&#34;m&#34;&gt;3&lt;/span&gt;/3       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          2m
+my-cluster-kafka-0                            &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;          3m
+my-cluster-kafka-1                            &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;          3m
+my-cluster-kafka-2                            &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;          3m
+my-cluster-zookeeper-0                        &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m
+my-cluster-zookeeper-1                        &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;          4m
+my-cluster-zookeeper-2                        &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m
+strimzi-cluster-operator-7d8898b9b9-d6sqd     &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          46m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;このように、Kafkaとzookeeperがインストールされていることを確認できます。&lt;/p&gt;
+
+&lt;h2 id=&#34;topic-operatorで-kafkaクラスタにtopicを作成する&#34;&gt;Topic Operatorで、KafkaクラスタにTopicを作成する&lt;/h2&gt;
+
+&lt;p&gt;strimziは、Kafkaクラスタそのものを保守するCluster Operator以外にも、Kafkaクラスタにtopicやuserを作ってくれるOperatorも設定されます。&lt;/p&gt;
+
+&lt;p&gt;Topic Operatorは、上記手順でインストールされた「my-cluster-entity-operator-xxxx」(Entity Operator)にあるので、すでに使える状態になっています。&lt;/p&gt;
+
+&lt;p&gt;さっそくTopic OperatorでKafkaクラスタ上にtopicを作成してみます。「examples/topic/kafka-topic.yaml」に例がありますが、以下のようなKafkaTopicというCRを作成することでTopic OperatorがKafkaクラスタ上にtopicを作成してくれます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;kafka.strimzi.io/v1alpha1&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;KafkaTopic&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;my-topic&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;labels&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;strimzi.io/cluster&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;my-cluster&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;partitions&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;replicas&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;config&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;retention.ms&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;7200000&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;segment.bytes&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;1073741824&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これを、以下のようにKubernetesクラスタに適用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ oc apply -f examples/topic/kafka-topic.yaml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これで、Kafkaクラスタにtopicが作成されます。&lt;/p&gt;
+
+&lt;h2 id=&#34;kafkaクラスタにメッセージを投げてみる&#34;&gt;Kafkaクラスタにメッセージを投げてみる&lt;/h2&gt;
+
+&lt;p&gt;さて、Kafkaクラスタがインストールされたので、このKafkaにメッセージをPublish/Subscribeしてみます。&lt;/p&gt;
+
+&lt;p&gt;strimziには、サンプルのクライアントも付いているので、簡単にKafkaクラスタを検証できます。&lt;/p&gt;
+
+&lt;h3 id=&#34;メッセージをsubscribeするクライアントを実行する&#34;&gt;メッセージをSubscribeするクライアントを実行する&lt;/h3&gt;
+
+&lt;p&gt;以下でメッセージをSubscribeしてみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ oc run kafka-consumer -ti --image&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;strimzi/kafka:0.7.0 --restart&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;Never &lt;span class=&#34;se&#34;&gt;\-&lt;/span&gt;- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;上記コマンドを実行すると、Kubernetes上でサンプルクライアントが実行され、Kafkaのトピック「my-topic」をSubscribeする状態になります。&lt;/p&gt;
+
+&lt;p&gt;メッセージをPublishするクライアントを実行する
+ターミナルをもう一つ開いて、以下コマンドを実行します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;$ oc run kafka-producer -ti --image&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;strimzi/kafka:0.7.0 --restart&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;Never &lt;span class=&#34;se&#34;&gt;\-&lt;/span&gt;- bin/kafka-console-producer.sh --broker-list my-cluster-kafka-bootstrap:9092 --topic my-topic&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;プロンプトが開くので、適当に文字列を入力してみてください。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;If you don&lt;span class=&#34;err&#34;&gt;&amp;#39;&lt;/span&gt;t see a &lt;span class=&#34;nb&#34;&gt;command&lt;/span&gt; prompt, try pressing enter.
+&amp;gt;test
+&amp;gt;a aaa&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;すると、kafka-consumerの上で入力したメッセージが表示されるのを確認できるはずです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-sh&#34; data-lang=&#34;sh&#34;&gt;If you don&lt;span class=&#34;err&#34;&gt;&amp;#39;&lt;/span&gt;t see a &lt;span class=&#34;nb&#34;&gt;command&lt;/span&gt; prompt, try pressing enter.
+&amp;gt;test
+&amp;gt;a aaa&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;まとめ
+さて、Kubernetes上にKafkaをインストールし、メッセージングプラットフォームを構築してみました。&lt;/p&gt;
+
+&lt;p&gt;実際には、JavaやRubyのクライアントからこのKafkaのトピックをPub/Subして非同期通信、マイクロサービスを実現したり、IoTなイベントを受けたり、ログ集約基盤を作ったりするわけです。&lt;/p&gt;
+
+&lt;p&gt;そういうわけで、次はJavaアプリからこのKafkaを使ってみます。&lt;/p&gt;
+</description>
+      
+    </item>
+    
+  </channel>
+</rss>

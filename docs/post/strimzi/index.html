@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ja" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する - literalice</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="Masatoshi Hayashi" />
+  <meta name="description" content="KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ" />
+
+  <meta name="keywords" content="Technology" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.49" />
+
+
+<link rel="canonical" href="https://literalice.com/post/strimzi/" />
+
+
+
+<link rel="apple-touch-icon" sizes="57x57" href="/images/icons/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/images/icons/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/images/icons/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/images/icons/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/images/icons/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/images/icons/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/images/icons/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/images/icons/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="/images/icons/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/icons/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/icons/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/images/icons/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/custom.css">
+
+
+<meta property="og:title" content="Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する" />
+<meta property="og:description" content="KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://literalice.com/post/strimzi/" /><meta property="article:published_time" content="2018-10-04T16:01:23&#43;08:00"/>
+<meta property="article:modified_time" content="2018-10-04T16:01:23&#43;08:00"/>
+
+<meta itemprop="name" content="Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する">
+<meta itemprop="description" content="KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ">
+
+
+<meta itemprop="datePublished" content="2018-10-04T16:01:23&#43;08:00" />
+<meta itemprop="dateModified" content="2018-10-04T16:01:23&#43;08:00" />
+<meta itemprop="wordCount" content="3294">
+
+
+
+<meta itemprop="keywords" content="kafka,openshift,kubernetes," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する"/>
+<meta name="twitter:description" content="KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">literalice</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/tags/">Tags</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/categories/">Categories</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://github.com/literalice" rel="noopener" target="_blank">
+              Source
+              <i class="iconfont icon-new-window"></i>
+            </a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      literalice
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/">Home</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/tags/">Tags</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/categories/">Categories</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://github.com/literalice" rel="noopener" target="_blank">
+              Source
+            <i class="iconfont icon-new-window"></i>
+            </a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する</h1>
+      
+      <div class="post-meta">
+        <span class="post-time"> 2018-10-04 </span>
+        <div class="post-category">
+            <a href="https://literalice.com/categories/technology/"> Technology </a>
+            
+          </div>
+        
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="head-toc">
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#kafkaとkubernetes">KafkaとKubernetes</a></li>
+<li><a href="#minishiftにkafkaをoperatorでインストールする">minishiftにKafkaをoperatorでインストールする</a>
+<ul>
+<li><a href="#strimziのダウンロード">strimziのダウンロード</a></li>
+<li><a href="#strimziのcluster-operatorをインストールする">strimziのCluster Operatorをインストールする</a></li>
+<li><a href="#cluster-operatorでkafkaのクラスタをインストールする">Cluster OperatorでKafkaのクラスタをインストールする</a></li>
+</ul></li>
+<li><a href="#topic-operatorで-kafkaクラスタにtopicを作成する">Topic Operatorで、KafkaクラスタにTopicを作成する</a></li>
+<li><a href="#kafkaクラスタにメッセージを投げてみる">Kafkaクラスタにメッセージを投げてみる</a>
+<ul>
+<li><a href="#メッセージをsubscribeするクライアントを実行する">メッセージをSubscribeするクライアントを実行する</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">目次</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#kafkaとkubernetes">KafkaとKubernetes</a></li>
+<li><a href="#minishiftにkafkaをoperatorでインストールする">minishiftにKafkaをoperatorでインストールする</a>
+<ul>
+<li><a href="#strimziのダウンロード">strimziのダウンロード</a></li>
+<li><a href="#strimziのcluster-operatorをインストールする">strimziのCluster Operatorをインストールする</a></li>
+<li><a href="#cluster-operatorでkafkaのクラスタをインストールする">Cluster OperatorでKafkaのクラスタをインストールする</a></li>
+</ul></li>
+<li><a href="#topic-operatorで-kafkaクラスタにtopicを作成する">Topic Operatorで、KafkaクラスタにTopicを作成する</a></li>
+<li><a href="#kafkaクラスタにメッセージを投げてみる">Kafkaクラスタにメッセージを投げてみる</a>
+<ul>
+<li><a href="#メッセージをsubscribeするクライアントを実行する">メッセージをSubscribeするクライアントを実行する</a></li>
+</ul></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="/images/strimzi_logo.png" />
+    </div>
+    <a href="/images/strimzi_logo.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+
+<h2 id="kafkaとkubernetes">KafkaとKubernetes</h2>
+
+<p>メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもその重要性は大きくなっています。<br />
+マイクロサービス間の非同期な連携とか、イベントソーシングなアプリのイベントストア、分散システムのログ集約などなど様々ですね。</p>
+
+<p>Kubernetes上でマイクロサービスを作成する場合も、kubernetesクラスタ上にKafkaをインストールしてサクッと使ってみたいものです。</p>
+
+<blockquote>
+<p>
+
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="https://cdn-images-1.medium.com/max/1600/1*s0jqmRff9avwTrfQPHfeeg.png" />
+    </div>
+    <a href="https://cdn-images-1.medium.com/max/1600/1*s0jqmRff9avwTrfQPHfeeg.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+<a href="https://medium.com/@ulymarins/an-introduction-to-apache-kafka-and-microservices-communication-bf0a0966d63">https://medium.com/@ulymarins/an-introduction-to-apache-kafka-and-microservices-communication-bf0a0966d63</a></p>
+</blockquote>
+
+<p>しかしKafkaは、Kafkaのプロセスだけでなくzookeeperのクラスタも構築して保守してやる必要があったり、そもそもステートフルだったりで、kubernetes上でデプロイ、保守するのはとても敷居が高いものでした。</p>
+
+<p>そこを解決するのが<a href="http://strimzi.io/">strimzi</a>というOSSです。</p>
+
+<p>strimziは、<code>operator</code>という仕組みでkubernetes上のKafkaクラスタの管理を大幅に省力化します。</p>
+
+<p><code>operator</code>に関しては、 <a href="https://pocketstudio.net/2016/11/10/introducing-operators-translate-jp/">https://pocketstudio.net/2016/11/10/introducing-operators-translate-jp/</a> あたりが参考になります。<br />
+その実体は、 <strong>Kubernetesにデプロイされたコンテナ</strong> です。<br />
+KubernetesのAPIでイベントを監視して、コンテナをデプロイしたり設定したりバックアップしたりといった保守作業を行うコンテナのことを<code>operator</code>と呼びます。</p>
+
+<p>strimziでは、以下3つの<code>operator</code>を提供しています。</p>
+
+<ul>
+<li><a href="http://strimzi.io/docs/0.7.0/#cluster-operator-str">Cluster Operator</a><br />
+<code>Kafka</code>というCustom Resourceの状態を監視して、zookeeperやKafkaのデプロイ、設定、保守を行う<br />
+
+
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="/images/strimzi_cluster_operator.png" />
+    </div>
+    <a href="/images/strimzi_cluster_operator.png" itemprop="contentUrl"></a>
+      <figcaption><h4>Strimzi Cluster Operator</h4>
+      </figcaption>
+  </figure>
+</div>
+</li>
+<li><a href="http://strimzi.io/docs/0.7.0/#assembly-getting-started-topic-operator-str">Topic Operator</a><br />
+KafkaTopicというCustom Resourceの状態を監視して、Cluster Operatorが保守しているKafka上にtopicを作成したり削除したり設定変更したりする</li>
+<li><a href="http://strimzi.io/docs/0.7.0/#assembly-getting-started-user-operator-str">User Operator</a><br />
+KafkaUserというCustom Resourceの状態を監視して、Kafkaのユーザーを管理する</li>
+</ul>
+
+<p>つまり、strimziを使うと、以下のようなyamlを、</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>kafka.strimzi.io/v1alpha1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>Kafka<span class="w">
+</span><span class="w"></span>metadata<span class="p">:</span><span class="w">
+</span><span class="w">  </span>name<span class="p">:</span><span class="w"> </span>my-cluster<span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>kafka<span class="p">:</span><span class="w">
+</span><span class="w">    </span>replicas<span class="p">:</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="w">    </span>listeners<span class="p">:</span><span class="w">
+</span><span class="w">      </span>plain<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">      </span>tls<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">    </span>readinessProbe<span class="p">:</span><span class="w">
+</span><span class="w">      </span>initialDelaySeconds<span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span><span class="w">      </span>timeoutSeconds<span class="p">:</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span><span class="w">    </span>livenessProbe<span class="p">:</span><span class="w">
+</span><span class="w">      </span>initialDelaySeconds<span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span><span class="w">      </span>timeoutSeconds<span class="p">:</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span><span class="w"></span><span class="c"># ...</span></code></pre></td></tr></table>
+</div>
+</div>
+<p><code>kubectl -f kafka-cluster.yml</code>というように適用するだけでkubernetes上にKafkaをプロビジョニングできるということです。便利ですね。</p>
+
+<p>そういうわけで、さっそくローカルのk8s環境で試してみましょう。</p>
+
+<h2 id="minishiftにkafkaをoperatorでインストールする">minishiftにKafkaをoperatorでインストールする</h2>
+
+<p>strimziがサポートしているKubernetes環境は、Kubernetes 1.9以上またはOpenShift3.9以上とのことです。<br />
+<a href="http://strimzi.io/docs/0.7.0/#getting-started-str">http://strimzi.io/docs/0.7.0/#getting-started-str</a></p>
+
+<p>今回は、minishiftでローカルにOpenShift環境を立ち上げて試してみます。</p>
+
+<p>minishiftのインストールはこちらを参照してください。<br />
+<a href="https://docs.okd.io/latest/minishift/getting-started/installing.html">https://docs.okd.io/latest/minishift/getting-started/installing.html</a></p>
+
+<p>インストールしたら、以下コマンドでローカルにOpenShiftを立ち上げます。<br />
+何となくメモリたくさん使いそうなので、6GB割り当てるようにしました。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ minishift start --memory<span class="o">=</span>6GB
+
+<span class="c1">#...
+</span><span class="c1"></span>
+$ oc login -u system:admin</code></pre></td></tr></table>
+</div>
+</div>
+<p>これ以降の手順ではclusterスコープの<a href="https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/">CRD</a>を設定したりする関係上、<code>cluster-admin</code>権限が必要なので、とりあえず<code>system:admin</code>でログインしておきます。</p>
+
+<h3 id="strimziのダウンロード">strimziのダウンロード</h3>
+
+<p>strimziをGitHubからダウンロードします。</p>
+
+<p><a href="https://github.com/strimzi/strimzi-kafka-operator/releases">https://github.com/strimzi/strimzi-kafka-operator/releases</a></p>
+
+<h3 id="strimziのcluster-operatorをインストールする">strimziのCluster Operatorをインストールする</h3>
+
+<p>Kafkaのクラスタをインストール、設定してくれる、strimziの<code>Cluster Operator</code>をインストールします。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ oc new-project kafka-op <span class="c1"># Cluster Operatorをインストールするproject(namespace)を作成する
+</span><span class="c1"></span>$ <span class="nb">cd</span> strimzi-0.7/ <span class="c1"># ダウンロードしたstrimziを解凍した先に移動
+</span><span class="c1"># Cluster Operatorのデプロイ設定に記載されているプロジェクト名を変更する
+</span><span class="c1"></span>$ sed -i <span class="s1">&#39;&#39;</span> <span class="s1">&#39;s/namespace: .*/namespace: kafka-op/&#39;</span> examples/install/cluster-operator/*RoleBinding*.yaml
+<span class="c1"># Cluster Operatorのデプロイ
+</span><span class="c1"></span>$ oc apply -f examples/install/cluster-operator -n kafka-op
+$ oc apply -f examples/templates/cluster-operator -n kafka-op</code></pre></td></tr></table>
+</div>
+</div>
+<h3 id="cluster-operatorでkafkaのクラスタをインストールする">Cluster OperatorでKafkaのクラスタをインストールする</h3>
+
+<p>Cluster Operatorがインストールされれば、それを使ってKafkaのクラスタをインストールできます。</p>
+
+<p>Cluster Operatorは、project(namespace)内のイベントを監視しており、ここに<code>Kafka</code>(CR, <a href="https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#create-custom-objects">Custom Resource</a>)を作成することでKafkaのクラスタをインストール、設定してくれます。</p>
+
+<p><code>Kafka</code>(CR)は、yamlの例が「examples/kafka」に格納されています。</p>
+
+<dl>
+<dt>examples/kafka/kafka-ephemeral.yaml</dt>
+<dd>永続ストレージを割り当てない揮発性のKafkaクラスタ(検証用)</dd>
+<dt>examples/kafka/kafka-persistent.yaml</dt>
+<dd>永続ストレージを割り当てたKafkaクラスタ</dd>
+</dl>
+
+<p>今回は、検証用にephemeralなほうをインストールします。<code>Kafka</code>CRは以下のような形式です。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>kafka.strimzi.io/v1alpha1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>Kafka<span class="w">
+</span><span class="w"></span>metadata<span class="p">:</span><span class="w">
+</span><span class="w">  </span>name<span class="p">:</span><span class="w"> </span>my-cluster<span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>kafka<span class="p">:</span><span class="w">
+</span><span class="w">    </span>replicas<span class="p">:</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="w">    </span>listeners<span class="p">:</span><span class="w">
+</span><span class="w">      </span>plain<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">      </span>tls<span class="p">:</span><span class="w"> </span>{}<span class="w">
+</span><span class="w">    </span>readinessProbe<span class="p">:</span><span class="w">
+</span><span class="w">      </span>initialDelaySeconds<span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span><span class="w">      </span>timeoutSeconds<span class="p">:</span><span class="w"> </span><span class="m">5</span><span class="w">
+</span><span class="w">    </span>livenessProbe<span class="p">:</span><span class="w">
+</span><span class="w">      </span>initialDelaySeconds<span class="p">:</span><span class="w"> </span><span class="m">15</span><span class="w">
+</span><span class="w">      </span>timeoutSeconds<span class="p">:</span><span class="w"> </span><span class="m">5</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>なんとなく、どんなクラスタができるか想像できますね。このCRをKubernetes上に作成します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ oc apply -f examples/kafka/kafka-ephemeral.yaml
+$ oc get kafka
+
+NAME           AGE
+my-cluster     14s</code></pre></td></tr></table>
+</div>
+</div>
+<p>上記のようにkafkaリソースが作成されたら、Cluster Operatorがkafkaリソースの定義に従ってKafkaのクラスタをセットアップしてくれるので、それを確認します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ oc get pods -w
+
+NAME                                          READY     STATUS    RESTARTS   AGE
+my-cluster-entity-operator-54758cf6f6-nvcqm   <span class="m">3</span>/3       Running   <span class="m">0</span>          2m
+my-cluster-kafka-0                            <span class="m">2</span>/2       Running   <span class="m">1</span>          3m
+my-cluster-kafka-1                            <span class="m">2</span>/2       Running   <span class="m">1</span>          3m
+my-cluster-kafka-2                            <span class="m">2</span>/2       Running   <span class="m">1</span>          3m
+my-cluster-zookeeper-0                        <span class="m">2</span>/2       Running   <span class="m">0</span>          4m
+my-cluster-zookeeper-1                        <span class="m">2</span>/2       Running   <span class="m">1</span>          4m
+my-cluster-zookeeper-2                        <span class="m">2</span>/2       Running   <span class="m">0</span>          4m
+strimzi-cluster-operator-7d8898b9b9-d6sqd     <span class="m">1</span>/1       Running   <span class="m">0</span>          46m</code></pre></td></tr></table>
+</div>
+</div>
+<p>このように、Kafkaとzookeeperがインストールされていることを確認できます。</p>
+
+<h2 id="topic-operatorで-kafkaクラスタにtopicを作成する">Topic Operatorで、KafkaクラスタにTopicを作成する</h2>
+
+<p>strimziは、Kafkaクラスタそのものを保守するCluster Operator以外にも、Kafkaクラスタにtopicやuserを作ってくれるOperatorも設定されます。</p>
+
+<p>Topic Operatorは、上記手順でインストールされた「my-cluster-entity-operator-xxxx」(Entity Operator)にあるので、すでに使える状態になっています。</p>
+
+<p>さっそくTopic OperatorでKafkaクラスタ上にtopicを作成してみます。「examples/topic/kafka-topic.yaml」に例がありますが、以下のようなKafkaTopicというCRを作成することでTopic OperatorがKafkaクラスタ上にtopicを作成してくれます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>kafka.strimzi.io/v1alpha1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>KafkaTopic<span class="w">
+</span><span class="w"></span>metadata<span class="p">:</span><span class="w">
+</span><span class="w">  </span>name<span class="p">:</span><span class="w"> </span>my-topic<span class="w">
+</span><span class="w">  </span>labels<span class="p">:</span><span class="w">
+</span><span class="w">    </span>strimzi.io/cluster<span class="p">:</span><span class="w"> </span>my-cluster<span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>partitions<span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="w">  </span>replicas<span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="w">  </span>config<span class="p">:</span><span class="w">
+</span><span class="w">    </span>retention.ms<span class="p">:</span><span class="w"> </span><span class="m">7200000</span><span class="w">
+</span><span class="w">    </span>segment.bytes<span class="p">:</span><span class="w"> </span><span class="m">1073741824</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>これを、以下のようにKubernetesクラスタに適用します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ oc apply -f examples/topic/kafka-topic.yaml</code></pre></td></tr></table>
+</div>
+</div>
+<p>これで、Kafkaクラスタにtopicが作成されます。</p>
+
+<h2 id="kafkaクラスタにメッセージを投げてみる">Kafkaクラスタにメッセージを投げてみる</h2>
+
+<p>さて、Kafkaクラスタがインストールされたので、このKafkaにメッセージをPublish/Subscribeしてみます。</p>
+
+<p>strimziには、サンプルのクライアントも付いているので、簡単にKafkaクラスタを検証できます。</p>
+
+<h3 id="メッセージをsubscribeするクライアントを実行する">メッセージをSubscribeするクライアントを実行する</h3>
+
+<p>以下でメッセージをSubscribeしてみます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ oc run kafka-consumer -ti --image<span class="o">=</span>strimzi/kafka:0.7.0 --restart<span class="o">=</span>Never <span class="se">\-</span>- bin/kafka-console-consumer.sh --bootstrap-server my-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning</code></pre></td></tr></table>
+</div>
+</div>
+<p>上記コマンドを実行すると、Kubernetes上でサンプルクライアントが実行され、Kafkaのトピック「my-topic」をSubscribeする状態になります。</p>
+
+<p>メッセージをPublishするクライアントを実行する
+ターミナルをもう一つ開いて、以下コマンドを実行します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">$ oc run kafka-producer -ti --image<span class="o">=</span>strimzi/kafka:0.7.0 --restart<span class="o">=</span>Never <span class="se">\-</span>- bin/kafka-console-producer.sh --broker-list my-cluster-kafka-bootstrap:9092 --topic my-topic</code></pre></td></tr></table>
+</div>
+</div>
+<p>プロンプトが開くので、適当に文字列を入力してみてください。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">If you don<span class="err">&#39;</span>t see a <span class="nb">command</span> prompt, try pressing enter.
+&gt;test
+&gt;a aaa</code></pre></td></tr></table>
+</div>
+</div>
+<p>すると、kafka-consumerの上で入力したメッセージが表示されるのを確認できるはずです。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-sh" data-lang="sh">If you don<span class="err">&#39;</span>t see a <span class="nb">command</span> prompt, try pressing enter.
+&gt;test
+&gt;a aaa</code></pre></td></tr></table>
+</div>
+</div>
+<p>まとめ
+さて、Kubernetes上にKafkaをインストールし、メッセージングプラットフォームを構築してみました。</p>
+
+<p>実際には、JavaやRubyのクライアントからこのKafkaのトピックをPub/Subして非同期通信、マイクロサービスを実現したり、IoTなイベントを受けたり、ログ集約基盤を作ったりするわけです。</p>
+
+<p>そういうわけで、次はJavaアプリからこのKafkaを使ってみます。</p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">Author</span>
+    <span class="item-content">Masatoshi Hayashi</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">LastMod</span>
+    <span class="item-content">2018-10-04</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">License</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://literalice.com/tags/kafka/">kafka</a>
+          <a href="https://literalice.com/tags/openshift/">openshift</a>
+          <a href="https://literalice.com/tags/kubernetes/">kubernetes</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  <div class="disqus-comment">
+  <div class="disqus-button" id="load_disqus" onclick="load_disqus()">
+    Show Disqus Comments
+  </div>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_config = function () {
+      this.page.url = "https://literalice.com/post/strimzi/";
+    };
+    function load_disqus() {
+      
+      
+      if (window.location.hostname === 'localhost') return;
+
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      var disqus_shortname = 'literalice';
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+
+      $('#load_disqus').remove();
+    };
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+  </noscript>
+  
+  </div>
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:literalice@monochromeroad.com" rel="me noopener" class="iconfont icon-email"
+        title="email">
+      </a>
+      <a href="https://twitter.com/literalice" rel="me noopener" class="iconfont icon-twitter"
+        title="twitter" target="_blank">
+      </a>
+      <a href="https://github.com/literalice" rel="me noopener" class="iconfont icon-github"
+        title="github" target="_blank">
+      </a>
+  <a href="https://literalice.com/index.xml" rel="noopener alternate" type="application/rss&#43;xml" class="iconfont icon-rss"
+    title="rss" target="_blank">
+  </a>
+  </div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2018
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span><span class="author">
+        Masatoshi Hayashi
+        
+      </span></span>
+
+  
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
