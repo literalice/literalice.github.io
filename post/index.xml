@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on literalice</title>
+    <link>https://literalice.com/post/</link>
+    <description>Recent content in Posts on literalice</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Thu, 04 Oct 2018 16:01:23 +0800</lastBuildDate>
+    
+	<atom:link href="https://literalice.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する</title>
+      <link>https://literalice.com/post/strimzi/</link>
+      <pubDate>Thu, 04 Oct 2018 16:01:23 +0800</pubDate>
+      
+      <guid>https://literalice.com/post/strimzi/</guid>
+      <description>KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ</description>
+    </item>
+    
+  </channel>
+</rss>
