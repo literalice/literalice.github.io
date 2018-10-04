@@ -2,7 +2,7 @@
 # If you want to see the full configuration, please check `full-config.toml` .
 # And see https://gohugo.io/getting-started/configuration/ .
 
-baseURL = "https://blog.literalice.com/"
+baseURL = "https://literalice.com/"
 title = "literalice"
 enableRobotsTXT = true
 enableEmoji = true
@@ -22,9 +22,6 @@ pygmentsOptions = "linenos=table"
 
 # language support # en / zh-cn / other... translations present in i18n/
 defaultContentLanguage = "ja"           # Default language to use
-[languages.en]
-  languageCode = "en"
-
 [languages.ja]
   languageCode = "ja"
 
