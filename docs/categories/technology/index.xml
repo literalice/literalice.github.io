@@ -6,10 +6,19 @@
     <description>Recent content in Technology on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Thu, 04 Oct 2018 16:01:23 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 05 Oct 2018 14:01:05 +0900</lastBuildDate>
     
 	<atom:link href="https://literalice.com/categories/technology/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>minishift addonでIstioを簡単に試す</title>
+      <link>https://literalice.com/post/istio-minishift-addon/</link>
+      <pubDate>Fri, 05 Oct 2018 14:01:05 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/istio-minishift-addon/</guid>
+      <description>Istio Operator このOperator全盛時代、IstioもOperatorが開発されています。 https://github.com/Maistra/istio-operator Istioは、十数個のPodとCRD、RBAC設定などか</description>
+    </item>
     
     <item>
       <title>Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する</title>
