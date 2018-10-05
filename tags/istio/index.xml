@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on literalice</title>
-    <link>https://literalice.com/post/</link>
-    <description>Recent content in Posts on literalice</description>
+    <title>Istio on literalice</title>
+    <link>https://literalice.com/tags/istio/</link>
+    <description>Recent content in Istio on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
     <lastBuildDate>Fri, 05 Oct 2018 14:01:05 +0900</lastBuildDate>
     
-	<atom:link href="https://literalice.com/post/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://literalice.com/tags/istio/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -18,15 +18,6 @@
       
       <guid>https://literalice.com/post/istio-minishift-addon/</guid>
       <description>Istio Operator このOperator全盛時代、IstioもOperatorが開発されています。 https://github.com/Maistra/istio-operator Istioは、十数個のPodとCRD、RBAC設定などか</description>
-    </item>
-    
-    <item>
-      <title>Kafka operator (strimzi)でKubernetes上にNoOpsなメッセージングシステムを実現する</title>
-      <link>https://literalice.com/post/strimzi/</link>
-      <pubDate>Thu, 04 Oct 2018 16:01:23 +0800</pubDate>
-      
-      <guid>https://literalice.com/post/strimzi/</guid>
-      <description>KafkaとKubernetes メッセージングシステムは昔からいろいろな用途で使われてきましたが、近年のモダンなサービス開発という流れでもそ</description>
     </item>
     
   </channel>
