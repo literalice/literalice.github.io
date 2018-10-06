@@ -8,6 +8,7 @@ pipeline {
     stage('build') {
         steps {
             script {
+              sh "ssh-add -l"
               sh "hugo"
             }
         }
