@@ -1,0 +1,16 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: literalicegithubio
+spec:
+  source:
+    git:
+      ref: develop
+      uri: git@github.com:literalice/literalice.github.io.git
+    sourceSecret:
+      name: literalice.github.io
+    type: Git
+  strategy:
+    jenkinsPipelineStrategy:
+      jenkinsfilePath: Jenkinsfile
+    type: JenkinsPipeline
