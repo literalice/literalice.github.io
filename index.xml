@@ -6,10 +6,86 @@
     <description>Recent content on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Fri, 05 Oct 2018 14:01:05 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 06 Oct 2018 22:22:23 +0900</lastBuildDate>
     
         <atom:link href="https://literalice.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenShiftのJenkinsを好きなプラグインをインストールした状態でプロビジョニングする</title>
+      <link>https://literalice.com/post/jenkins-plugin-openshift/</link>
+      <pubDate>Sat, 06 Oct 2018 22:22:23 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/jenkins-plugin-openshift/</guid>
+      
+        <description>&lt;p&gt;OpenShiftに機能の一部として同梱されているJenkinsですが、デプロイ時に環境変数を指定することで好きなJenkinsプラグインを追加することができます。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://docs.openshift.com/container-platform/3.10/using_images/other_images/jenkins.html#jenkins-environment-variables&#34;&gt;https://docs.openshift.com/container-platform/3.10/using_images/other_images/jenkins.html#jenkins-environment-variables&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;指定するのは、以下の二つの環境変数です。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Jenkinsプラグインが保存されているPVへ、Jenkinsのコンテナからプラグインを上書きコピーするかどうか。
+&lt;code&gt;false&lt;/code&gt;(デフォルト)の場合、Jenkinsが初回に起動したときしかプラグインがコピーされない。&lt;/li&gt;
+&lt;li&gt;例： &lt;code&gt;true&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;INSTALL_PLUGINS&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OVERRIDE_PV_PLUGINS_WITH_IMAGE_PLUGINS&lt;/code&gt;が有効な場合に、追加でインストールするプラグインをカンマ区切りで指定する&lt;/li&gt;
+&lt;li&gt;例： &lt;code&gt;ssh-agent:1.17,slack&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;この環境変数を指定するには、JenkinsのDeployment Config設定で、&lt;/p&gt;
+
+
+&lt;link rel=&#34;stylesheet&#34; href=&#34;https://literalice.com/css/hugo-easy-gallery.css&#34; /&gt;
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/jenkins-deploymentconfig-edit.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/jenkins-deploymentconfig-edit.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;以下のように環境変数を追加します。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/jenkins-deploymentconfig-edit-env.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/jenkins-deploymentconfig-edit-env.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;そうすると、起動したJenkinsで指定したプラグインが設定されているはずです。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/jenkins-plugin-installed.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/jenkins-plugin-installed.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;Templateなどを用意してやれば、必要なプラグインがインストールされた状態でJenkinsを使ってもらうことができますね。&lt;/p&gt;
+</description>
+      
+    </item>
     
     <item>
       <title>minishift addonでIstioを簡単に試す</title>
