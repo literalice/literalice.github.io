@@ -2,6 +2,7 @@
 title: "OpenShiftのJenkinsを好きなプラグインをインストールした状態でプロビジョニングする"
 date: 2018-10-06T22:22:23+09:00
 draft: false
+categories: ["Technology"]
 tags: ["openshift"]
 comment: true
 ---
