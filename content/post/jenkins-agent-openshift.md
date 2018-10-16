@@ -1,6 +1,6 @@
 ---
 title: "OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する"
-date: 2018-10-16T00:00:00+09:00
+date: 2018-10-16T23:00:00+09:00
 draft: false
 categories: ["Technology"]
 tags: ["jenkins", "openshift"]
