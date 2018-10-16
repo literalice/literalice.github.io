@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jenkins on literalice</title>
+    <link>https://literalice.com/tags/jenkins/</link>
+    <description>Recent content in Jenkins on literalice</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Tue, 16 Oct 2018 00:00:00 +0900</lastBuildDate>
+    
+	<atom:link href="https://literalice.com/tags/jenkins/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する</title>
+      <link>https://literalice.com/post/jenkins-agent-openshift/</link>
+      <pubDate>Tue, 16 Oct 2018 00:00:00 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/jenkins-agent-openshift/</guid>
+      <description>OpenShiftに組み込まれたJenkinsは、パイプラインビルドを開始したときにコンテナをOpenShift上に起動し、その上でパイプラ</description>
+    </item>
+    
+  </channel>
+</rss>
