@@ -6,7 +6,7 @@
     <description>Recent content on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Tue, 16 Oct 2018 00:00:00 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 16 Oct 2018 23:00:00 +0900</lastBuildDate>
     
         <atom:link href="https://literalice.com/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +14,7 @@
     <item>
       <title>OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する</title>
       <link>https://literalice.com/post/jenkins-agent-openshift/</link>
-      <pubDate>Tue, 16 Oct 2018 00:00:00 +0900</pubDate>
+      <pubDate>Tue, 16 Oct 2018 23:00:00 +0900</pubDate>
       
       <guid>https://literalice.com/post/jenkins-agent-openshift/</guid>
       
