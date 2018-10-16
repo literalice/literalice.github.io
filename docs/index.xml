@@ -6,10 +6,274 @@
     <description>Recent content on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 06 Oct 2018 22:22:23 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 16 Oct 2018 00:00:00 +0900</lastBuildDate>
     
         <atom:link href="https://literalice.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する</title>
+      <link>https://literalice.com/post/jenkins-agent-openshift/</link>
+      <pubDate>Tue, 16 Oct 2018 00:00:00 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/jenkins-agent-openshift/</guid>
+      
+        <description>
+
+&lt;p&gt;OpenShiftに組み込まれたJenkinsは、パイプラインビルドを開始したときにコンテナをOpenShift上に起動し、その上でパイプラインを実行します。&lt;/p&gt;
+
+&lt;p&gt;このようなJenkinsからビルドするために起動、破棄されるコンテナをAgentコンテナとかSlaveコンテナとか呼ぶようです。&lt;/p&gt;
+
+&lt;p&gt;このAgentとして使われるコンテナイメージは簡単に追加、変更できるのですが、方法がいまいち分かりにくいというか目立たない気がするので紹介させてください。&lt;/p&gt;
+
+&lt;p&gt;ここでは、&lt;code&gt;hugo&lt;/code&gt;を使って静的なサイトをOpenShiftのJenkinsでビルドする想定で、&lt;code&gt;hugo&lt;/code&gt;がインストールされた以下のコンテナイメージをJenkinsのagentとして使用します。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/literalice/agent-hugo/blob/master/Dockerfile&#34;&gt;https://github.com/literalice/agent-hugo/blob/master/Dockerfile&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-docker&#34; data-lang=&#34;docker&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-docker&#34; data-lang=&#34;docker&#34;&gt;&lt;span class=&#34;c&#34;&gt;# We are basing our builder image on openshift base-centos7 image&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;FROM&lt;/span&gt;&lt;span class=&#34;s&#34;&gt; openshift/jenkins-slave-base-centos7&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# Inform users who&amp;#39;s the maintainer of this builder image&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;MAINTAINER&lt;/span&gt;&lt;span class=&#34;s&#34;&gt; Masatoshi Hayashi &amp;lt;literalice@monochromeroad.com&amp;gt;&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# Install the required software&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;ADD&lt;/span&gt;&lt;span class=&#34;s&#34;&gt; daftaupe-hugo-epel-7.repo /etc/yum.repos.d/&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;RUN&lt;/span&gt; yum -y install hugo &lt;span class=&#34;o&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&#34;se&#34;&gt;\
+&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt;    yum -y clean all&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;RUN&lt;/span&gt; hugo version&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;err&#34;&gt;&lt;/span&gt;USER &lt;span class=&#34;m&#34;&gt;1001&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;imagestream&#34;&gt;ImageStream&lt;/h2&gt;
+
+&lt;p&gt;OpenShiftは、内部で使用するイメージの管理を &lt;code&gt;ImageStream&lt;/code&gt; というAPIオブジェクトで行っています。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://nekop.hatenablog.com/entry/2017/12/17/152353&#34;&gt;OpenShiftのImageStream&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;また、OpenShiftとJenkinsの設定には、以下の二つのプラグインが使われます。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/jenkinsci/kubernetes-plugin&#34;&gt;kubernetes-plugin&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;KubernetesのPodをJenkinsのagentとして起動できるようにする&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/openshift/jenkins-sync-plugin&#34;&gt;openshift-jenkins-sync-plugin&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;OpenShiftのビルドとJenkinsのジョブとビルドを同期する。OpenShift上でビルドが作られて実行されたときにJenkins上でジョブが作られてビルドされる、など&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Jenkinsのagentに関して言えば、&lt;code&gt;openshift-jenkins-sync-plugin&lt;/code&gt;のおかげで以下のことが実現されています。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;OpenShift上で&lt;code&gt;role=jenkins-slave&lt;/code&gt;というラベルが付けられた&lt;code&gt;ImageStream&lt;/code&gt;が作成されると、&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;kubernetes-plugin&lt;/code&gt;で、この&lt;code&gt;ImageStream&lt;/code&gt;のコンテナイメージが使われるように設定される&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;つまり、OpenShiftでagentとして使いたいイメージを指す&lt;code&gt;ImageStream&lt;/code&gt;オブジェクトを作って&lt;code&gt;role=jenkins-slave&lt;/code&gt;というラベルを付ければ、JenkinsのAgentとして使えるようになるということですね。&lt;/p&gt;
+
+&lt;p&gt;どうでもいいんですが、Jenkinsのネーミングガイドラインで&lt;code&gt;slave&lt;/code&gt;を&lt;code&gt;agent&lt;/code&gt;にする、というのをどこかで聞いた気がするんですが、現時点ではネーミングが混ざってて混乱しますね。&lt;/p&gt;
+
+&lt;h2 id=&#34;使用したいコンテナイメージを参照するimagestreamを作成する&#34;&gt;使用したいコンテナイメージを参照するImageStreamを作成する&lt;/h2&gt;
+
+&lt;p&gt;では、さっそくJenkinsから使うagentイメージを追加してみましょう。&lt;/p&gt;
+
+&lt;p&gt;OpenShift内でビルドしてもいいのですが、面倒なので既存のイメージからこれから&lt;code&gt;ImageStream&lt;/code&gt;を作りましょう。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://quay.io/repository/literalice/agent-hugo&#34;&gt;quay.io/literalice/agent-hugo&lt;/a&gt;にイメージを挙げているのでこれを使うことにします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc project myproject &lt;span class=&#34;c1&#34;&gt;# プロジェクトがない場合は作成する oc new-project myproject
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ oc import-image agent-hugo --from&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;quay.io/literalice/agent-hugo --confirm
+
+The import completed successfully.
+
+Name:			agent-hugo
+Namespace:		playground
+Created:		Less than a second ago
+Labels:			&amp;lt;none&amp;gt;
+Annotations:		openshift.io/image.dockerRepositoryCheck&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;m&#34;&gt;2018&lt;/span&gt;-10-09T09:21:24Z
+Docker Pull Spec:	docker-registry.default.svc:5000/playground/agent-hugo
+...&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これで、&lt;code&gt;quay.io/literalice/agent-hugo&lt;/code&gt;を示す&lt;code&gt;ImageStream&lt;/code&gt;ができました。&lt;/p&gt;
+
+&lt;h2 id=&#34;imagestreamにラベルを付ける&#34;&gt;ImageStreamにラベルを付ける&lt;/h2&gt;
+
+&lt;p&gt;このイメージがJenkinsのagentとして使われるよう、ラベル付けします。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc label is agent-hugo &lt;span class=&#34;s2&#34;&gt;&amp;#34;role=jenkins-slave&amp;#34;&lt;/span&gt;
+imagestream.image.openshift.io/agent-hugo labeled&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;コンテナイメージをagentにしてjenkinsビルドする&#34;&gt;コンテナイメージをagentにしてJenkinsビルドする&lt;/h2&gt;
+
+&lt;p&gt;上記で準備した&lt;code&gt;ImageStream&lt;/code&gt;を使ってJenkinsビルドを行います。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;15
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;16
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;17
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;18
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;19
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;20
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;21
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;22
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;23
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;24
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;25
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;BuildConfig&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;v1&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;hugo-sample-pipeline&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;strategy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;type&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;JenkinsPipeline&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;jenkinsPipelineStrategy&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;      &lt;/span&gt;jenkinsfile&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;|-&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;        &lt;/span&gt;pipeline&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;          &lt;/span&gt;agent&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;            &lt;/span&gt;node&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;              &lt;/span&gt;label&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;agent-hugo&amp;#39;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; 
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;            &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;          &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;          &lt;/span&gt;stages&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;            &lt;/span&gt;stage(&lt;span class=&#34;s1&#34;&gt;&amp;#39;version&amp;#39;&lt;/span&gt;)&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;              &lt;/span&gt;steps&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;                &lt;/span&gt;script&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;{&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;                  &lt;/span&gt;sh&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;hugo version&amp;#34;&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;                &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;              &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;            &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;          &lt;/span&gt;}&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;        &lt;/span&gt;}&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;pipeline.agent.node.label&lt;/code&gt;に、使用する&lt;code&gt;ImageStream&lt;/code&gt;名を指定します。&lt;/p&gt;
+
+&lt;p&gt;上記を、&lt;code&gt;buildconfig.yml&lt;/code&gt;という名前で保存して適用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc apply -f buildconfig.yml
+$ oc start-build hugo-sample-pipeline&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;ここで、作成されるPodを確認してみてください。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc get pods -w
+NAME               READY     STATUS    RESTARTS   AGE
+agent-hugo-dpp9p   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m
+jenkins-1-5spgx    &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          15m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Jenkinsのコンテナとagentである&lt;code&gt;agent-hugo&lt;/code&gt;のコンテナ、両方が立ち上がっていることが分かります。&lt;/p&gt;
+
+&lt;h2 id=&#34;結果確認&#34;&gt;結果確認&lt;/h2&gt;
+
+&lt;p&gt;では、以下コマンドでJenkisのURLを確認し、アクセスしてビルド結果を確認してみましょう。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ oc get route jenkins --template&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;{{ .spec.host }}&amp;#39;&lt;/span&gt;
+$ open http://&lt;span class=&#34;k&#34;&gt;$(&lt;/span&gt;oc get route jenkins --template&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s1&#34;&gt;&amp;#39;{{ .spec.host }}&amp;#39;&lt;/span&gt;&lt;span class=&#34;k&#34;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;link rel=&#34;stylesheet&#34; href=&#34;https://literalice.com/css/hugo-easy-gallery.css&#34; /&gt;
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/jenkins-hugo-pipeline.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/jenkins-hugo-pipeline.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;無事、ビルドできているようです。&lt;/p&gt;
+
+&lt;h2 id=&#34;まとめ&#34;&gt;まとめ&lt;/h2&gt;
+
+&lt;p&gt;OpenShiftのJenkinsで利用するagentのコンテナは簡単に追加できます。&lt;/p&gt;
+
+&lt;p&gt;個人的には、agentを追加してビルド環境を追加するよりも、OpenShiftの&lt;code&gt;s2i&lt;/code&gt;に投げるほうがキャッシュの仕組みなどカプセル化度が高く好きですが、&lt;br /&gt;
+Jenkinsのビルド環境もお手軽に追加できると嬉しいケースもありそうですので紹介してみました。&lt;/p&gt;
+</description>
+      
+    </item>
     
     <item>
       <title>OpenShiftのJenkinsを好きなプラグインをインストールした状態でプロビジョニングする</title>
