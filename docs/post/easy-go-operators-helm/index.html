@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ja" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Operatorの開発を身近にする技術 - Helm App Operator Kit - literalice</title>
+  
+
+<meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta name="MobileOptimized" content="width"/>
+<meta name="HandheldFriendly" content="true"/>
+
+
+<meta name="applicable-device" content="pc,mobile">
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="author" content="Masatoshi Hayashi" />
+  <meta name="description" content="Operator FrameworkではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、 そもそも状態を常時管理" />
+
+  <meta name="keywords" content="Technology" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.49" />
+
+
+<link rel="canonical" href="https://literalice.com/post/easy-go-operators-helm/" />
+
+
+
+<link rel="apple-touch-icon" sizes="57x57" href="/images/icons/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/images/icons/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/images/icons/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/images/icons/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/images/icons/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/images/icons/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/images/icons/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/images/icons/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/icons/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="/images/icons/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/icons/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/icons/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/images/icons/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+<link href="/dist/jane.min.css?v=2.7.0" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/css/custom.css">
+
+
+<meta property="og:title" content="Operatorの開発を身近にする技術 - Helm App Operator Kit" />
+<meta property="og:description" content="Operator FrameworkではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、 そもそも状態を常時管理" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://literalice.com/post/easy-go-operators-helm/" /><meta property="article:published_time" content="2018-11-07T10:14:03&#43;09:00"/>
+<meta property="article:modified_time" content="2018-11-07T10:14:03&#43;09:00"/>
+
+<meta itemprop="name" content="Operatorの開発を身近にする技術 - Helm App Operator Kit">
+<meta itemprop="description" content="Operator FrameworkではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、 そもそも状態を常時管理">
+
+
+<meta itemprop="datePublished" content="2018-11-07T10:14:03&#43;09:00" />
+<meta itemprop="dateModified" content="2018-11-07T10:14:03&#43;09:00" />
+<meta itemprop="wordCount" content="2709">
+
+
+
+<meta itemprop="keywords" content="helm,operator,kubernetes,openshift," />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Operatorの開発を身近にする技術 - Helm App Operator Kit"/>
+<meta name="twitter:description" content="Operator FrameworkではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、 そもそも状態を常時管理"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-126957505-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">literalice</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/">Home</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/post/">Archives</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/tags/">Tags</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/categories/">Categories</a>
+          
+        
+      </li><li class="mobile-menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://github.com/literalice" rel="noopener" target="_blank">
+              Source
+              <i class="iconfont icon-new-window"></i>
+            </a>
+          
+        
+      </li>
+    
+  </ul>
+</nav>
+
+
+  
+    
+
+
+
+
+
+
+  <link rel="stylesheet" href="/lib/photoswipe/photoswipe.min.css" />
+  <link rel="stylesheet" href="/lib/photoswipe/default-skin/default-skin.min.css" />
+
+
+
+
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="pswp__bg"></div>
+
+<div class="pswp__scroll-wrap">
+    
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    
+    <div class="pswp__ui pswp__ui--hidden">
+    <div class="pswp__top-bar">
+      
+      <div class="pswp__counter"></div>
+      <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+      <button class="pswp__button pswp__button--share" title="Share"></button>
+      <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+      <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+      
+      
+      <div class="pswp__preloader">
+        <div class="pswp__preloader__icn">
+          <div class="pswp__preloader__cut">
+            <div class="pswp__preloader__donut"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+      <div class="pswp__share-tooltip"></div>
+    </div>
+    <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+    </button>
+    <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+    </button>
+    <div class="pswp__caption">
+      <div class="pswp__caption__center"></div>
+    </div>
+    </div>
+    </div>
+</div>
+
+  
+
+  
+
+  <header id="header" class="header container">
+    <div class="logo-wrapper">
+  <a href="/" class="logo">
+    
+      literalice
+    
+  </a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/">Home</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/post/">Archives</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/tags/">Tags</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://literalice.com/categories/">Categories</a>
+          
+
+        
+
+      </li>
+    
+      <li class="menu-item">
+        
+          
+          
+            <a class="menu-item-link" href="https://github.com/literalice" rel="noopener" target="_blank">
+              Source
+            <i class="iconfont icon-new-window"></i>
+            </a>
+          
+
+        
+
+      </li>
+    
+    
+  </ul>
+</nav>
+
+  </header>
+
+  <div id="mobile-panel">
+    <main id="main" class="main bg-llight">
+      <div class="content-wrapper">
+        <div id="content" class="content container">
+          <article class="post bg-white">
+    
+    <header class="post-header">
+      <h1 class="post-title">Operatorの開発を身近にする技術 - Helm App Operator Kit</h1>
+      
+      <div class="post-meta">
+        <span class="post-time"> 2018-11-07 </span>
+        <div class="post-category">
+            <a href="https://literalice.com/categories/technology/"> Technology </a>
+            
+          </div>
+        
+
+        
+        
+
+        
+        
+      </div>
+    </header>
+
+    
+    
+<div class="head-toc">
+<nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#helm-app-operator-kit">Helm App Operator Kit</a>
+<ul>
+<li><a href="#前提">前提</a></li>
+<li><a href="#helm-app-operator-kitのダウンロード">Helm App Operator Kitのダウンロード</a></li>
+<li><a href="#helmチャートからoperatorのコンテナイメージをビルドする">HelmチャートからOperatorのコンテナイメージをビルドする</a></li>
+<li><a href="#operatorをインストールする">Operatorをインストールする</a></li>
+<li><a href="#operatorでtomcatをインストールする">OperatorでTomcatをインストールする</a></li>
+<li><a href="#operatorでtomcatのpodを変更する">OperatorでTomcatのPodを変更する</a></li>
+<li><a href="#operator-lifecycle-manager-olm-でtomcat-operatorを管理する">Operator Lifecycle Manager(OLM)でTomcat Operatorを管理する</a></li>
+</ul></li>
+<li><a href="#まとめ">まとめ</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+
+<div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">目次</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#helm-app-operator-kit">Helm App Operator Kit</a>
+<ul>
+<li><a href="#前提">前提</a></li>
+<li><a href="#helm-app-operator-kitのダウンロード">Helm App Operator Kitのダウンロード</a></li>
+<li><a href="#helmチャートからoperatorのコンテナイメージをビルドする">HelmチャートからOperatorのコンテナイメージをビルドする</a></li>
+<li><a href="#operatorをインストールする">Operatorをインストールする</a></li>
+<li><a href="#operatorでtomcatをインストールする">OperatorでTomcatをインストールする</a></li>
+<li><a href="#operatorでtomcatのpodを変更する">OperatorでTomcatのPodを変更する</a></li>
+<li><a href="#operator-lifecycle-manager-olm-でtomcat-operatorを管理する">Operator Lifecycle Manager(OLM)でTomcat Operatorを管理する</a></li>
+</ul></li>
+<li><a href="#まとめ">まとめ</a></li>
+</ul></li>
+</ul>
+</nav>
+  </div>
+</div>
+
+    
+    <div class="post-content">
+      
+
+
+<link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="https://coreos.com/assets/images/operators/operator_logo_framework_color.svg" />
+    </div>
+    <a href="https://coreos.com/assets/images/operators/operator_logo_framework_color.svg" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+
+<p><a href="https://coreos.com/operators/">Operator Framework</a>ではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、<br />
+そもそも状態を常時管理する必要が無いようなステートレスなコンテナにいちいちイチからOperatorを作るのは面倒です。</p>
+
+<p>Operator Framework自体がOperatorを簡単に実装できるようにするフレームワークではありますが、そういった要件を考慮してさらに開発を簡単にするラッパーが開発されています。</p>
+
+<ul>
+<li><a href="https://github.com/operator-framework/helm-app-operator-kit">Helm App Operator Kit</a></li>
+<li><a href="https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md">Ansible Operator</a></li>
+</ul>
+
+<p>前者は、既存のhelmチャートをOperatorに変換するもの、後者はAnsibleでOperatorを作るものです。</p>
+
+<p>この記事では、<code>Helm App Operator Kit</code>を紹介します。</p>
+
+<h2 id="helm-app-operator-kit">Helm App Operator Kit</h2>
+
+<p>helmはKubernetesの世界で既に広く使われているパッケージマネージャーであり、多くのhelmチャートが作られています。</p>
+
+<p>この資産、helmチャートからOperatorを作ることができれば便利そうですね。</p>
+
+<p>helmチャートをOperator化することで、</p>
+
+<ul>
+<li>CustomResourceによる宣言的なインストール、アップデート、設定変更が可能</li>
+<li>上記によりhelmコマンドやTillerをインストールすることなくkubectlでインストールやアップデートが完結する</li>
+<li><a href="https://github.com/operator-framework/operator-lifecycle-manager">Operator Lifecyle Manager</a>による管理対象にできる</li>
+</ul>
+
+<p>といったメリットがあります。これを実現するのが<a href="https://github.com/operator-framework/helm-app-operator-kit">Helm App Operator Kit</a>です。</p>
+
+<p>公式ベージにTomcatのhelmチャートをOperator化する例があるので試してみたいと思います。</p>
+
+<h3 id="前提">前提</h3>
+
+<ul>
+<li>ローカルマシンにDockerがインストールされていること</li>
+<li>QuayやDockerHubに自分で管理しているリポジトリがあること</li>
+<li>kubectlコマンドで操作できるKubernetes環境があること</li>
+</ul>
+
+<h3 id="helm-app-operator-kitのダウンロード">Helm App Operator Kitのダウンロード</h3>
+
+<p>git cloneしてくるだけです。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ git clone https://github.com/operator-framework/helm-app-operator-kit</code></pre></td></tr></table>
+</div>
+</div>
+<h3 id="helmチャートからoperatorのコンテナイメージをビルドする">HelmチャートからOperatorのコンテナイメージをビルドする</h3>
+
+<p><code>Helm App Operator Kit</code>では、build-argsにhelmチャートのtarballをURLで指定してdocker buildすることで、helmチャートをコンテナイメージに変換します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ <span class="nb">cd</span> helm-app-operator-kit/examples/tomcat-operator
+
+$ <span class="nb">export</span> <span class="nv">IMAGE</span><span class="o">=</span>quay.io/&lt;namespace&gt;/tomcat-operator:v0.0.1
+
+<span class="c1"># Operatorコンテナイメージをhelmチャートtomcat-0.1.0.tgzからビルド
+</span><span class="c1"></span>$ docker build <span class="se">\
+</span><span class="se"></span>  --build-arg <span class="nv">HELM_CHART</span><span class="o">=</span>https://storage.googleapis.com/kubernetes-charts/tomcat-0.1.0.tgz <span class="se">\
+</span><span class="se"></span>  --build-arg <span class="nv">API_VERSION</span><span class="o">=</span>apache.org/v1alpha1 <span class="se">\
+</span><span class="se"></span>  --build-arg <span class="nv">KIND</span><span class="o">=</span>Tomcat <span class="se">\
+</span><span class="se"></span>  -t <span class="nv">$IMAGE</span> ../../
+
+<span class="c1"># コンテナレジストリにログイン
+</span><span class="c1"></span>$ docker login -u<span class="o">=</span><span class="s2">&#34;xxx&#34;</span> -p<span class="o">=</span><span class="s2">&#34;xxx&#34;</span> quay.io
+$ docker push <span class="nv">$IMAGE</span></code></pre></td></tr></table>
+</div>
+</div>
+<blockquote>
+<p>なお、Tomcatのhelmチャートは何故かHostPortを空けようとするのでOpenShift環境だと権限の関係でPodがデプロイされません。tarをダウンロードして、変更することで修正できます。
+以下に修正したものをアップロードしましたのでご使用ください。
+<a href="https://s3-ap-northeast-1.amazonaws.com/literalice-helm-charts/tomcat-0.1.0.tgz">https://s3-ap-northeast-1.amazonaws.com/literalice-helm-charts/tomcat-0.1.0.tgz</a></p>
+</blockquote>
+
+<p>これで、Operatorのコンテナイメージが作成されコンテナレジストリにPushされました。</p>
+
+<h3 id="operatorをインストールする">Operatorをインストールする</h3>
+
+<p>さて、今回作成したTomcat Operatorは、以下のようなCRが作成、変更、削除されたときにTomcatを指定通りにインストールしたりアンインストールします。</p>
+
+<p>スキーマは、<code>docker build</code>時に指定したKINDなどのパラメーターと、helmチャートの<code>values.yaml</code>に従い決定されます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>apache.org/v1alpha1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>Tomcat<span class="w">
+</span><span class="w"></span>metadata<span class="p">:</span><span class="w">
+</span><span class="w">  </span>name<span class="p">:</span><span class="w"> </span>example-app<span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>replicaCount<span class="p">:</span><span class="w"> </span><span class="m">2</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>このCRをapplyすれば、TomcatがKubernetes上にプロビジョニングされるというわけですね。</p>
+
+<p>このCRを作成するためには、まずCRDを作成しなければなりません。</p>
+
+<p>サンプルのディレクトリには既に用意されているので、以下コマンドを適用するだけです。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl apply -f crd.yaml</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl apply -n &lt;operator-namespace&gt; -f rbac.yaml</code></pre></td></tr></table>
+</div>
+</div>
+<p>次に、Operatorをインストールします。テンプレートが用意されているので、プレースホルダを先ほどビルドしたOperatorコンテナイメージに置換して使用します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ sed <span class="s2">&#34;s|REPLACE_IMAGE|</span><span class="nv">$IMAGE</span><span class="s2">|&#34;</span> operator.yaml.template &gt; operator.yaml
+$ kubectl apply -n &lt;operator-namespace&gt; -f operator.yaml
+$ kubectl get pods -n playground 
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-79c876b9fc-bc4rv   <span class="m">1</span>/1       Running   <span class="m">0</span>          43s</code></pre></td></tr></table>
+</div>
+</div>
+<h3 id="operatorでtomcatをインストールする">OperatorでTomcatをインストールする</h3>
+
+<p>これで、Tomcatをインストールする準備ができました。</p>
+
+<p>以下のようにCRを適用すると、OperatorがTomcatをインストールしてくれるはずです。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl apply -n &lt;operator-namespace&gt; -f cr.yaml
+$ kubectl get pods -n &lt;operator-namespace&gt;
+NAME                                                            READY     STATUS    RESTARTS   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-8c977   <span class="m">2</span>/2       Running   <span class="m">0</span>          4m
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-zkz8r   <span class="m">2</span>/2       Running   <span class="m">0</span>          4m
+tomcat-operator-5f895b8db6-c96wp                                <span class="m">1</span>/1       Running   <span class="m">0</span>          4m</code></pre></td></tr></table>
+</div>
+</div>
+<h3 id="operatorでtomcatのpodを変更する">OperatorでTomcatのPodを変更する</h3>
+
+<p>このTomcat PodはOperatorで管理されているので、対応するCRをeditすることで設定を変更できます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl get tomcat -n &lt;operator-namespace&gt;
+NAME          AGE
+example-app   5h
+
+$ kubectl edit tomcat example-app -n &lt;operator-namespace&gt;</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-yaml" data-lang="yaml">apiVersion<span class="p">:</span><span class="w"> </span>apache.org/v1alpha1<span class="w">
+</span><span class="w"></span>kind<span class="p">:</span><span class="w"> </span>Tomcat<span class="w">
+</span><span class="w"></span><span class="c"># ...</span><span class="w">
+</span><span class="w"></span>spec<span class="p">:</span><span class="w">
+</span><span class="w">  </span>replicaCount<span class="p">:</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="c"># ここを1に変更する</span><span class="w">
+</span><span class="w"></span><span class="c"># ...</span></code></pre></td></tr></table>
+</div>
+</div>
+<p>Tomcat Podのインスタンス数を確認してみます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl get deploy -n &lt;operator-namespace&gt;
+NAME                                           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat   <span class="m">1</span>         <span class="m">1</span>         <span class="m">1</span>            <span class="m">1</span>           5h
+tomcat-operator                                <span class="m">1</span>         <span class="m">1</span>         <span class="m">1</span>            <span class="m">1</span>           5h</code></pre></td></tr></table>
+</div>
+</div>
+<p>このように、Podが減少していることが分かります。</p>
+
+<p>Tomcatをアンインストールするには、対応するCRを削除します。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl delete tomcat example-app -n &lt;operator-namespace&gt;
+
+$ kubectl get pods -n &lt;operator-namespace&gt; -w
+NAME                                                            READY     STATUS        RESTARTS   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-8c977   <span class="m">2</span>/2       Terminating   <span class="m">0</span>          17m
+tomcat-operator-5f895b8db6-c96wp                                <span class="m">1</span>/1       Running       <span class="m">0</span>          17m
+
+$ kubectl get pods -n &lt;operator-namespace&gt;
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-5f895b8db6-c96wp   <span class="m">1</span>/1       Running   <span class="m">0</span>          18m</code></pre></td></tr></table>
+</div>
+</div>
+<p><code>kubectl delete tomcat</code> 。すごく直観的で分かりやすいと思いませんか？</p>
+
+<h3 id="operator-lifecycle-manager-olm-でtomcat-operatorを管理する">Operator Lifecycle Manager(OLM)でTomcat Operatorを管理する</h3>
+
+<p>OLMをKubernetesにインストールしている場合は、Tomcat OperatorをOLMで管理することもできます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="c1"># インストールしたOperatorを削除する
+</span><span class="c1"></span>kubectl delete -f operator.yaml -n &lt;operator-namespace&gt;
+kubectl delete -f rbac.yaml -n &lt;operator-namespace&gt;
+
+<span class="c1"># CSV(ClusterServiceVersion)をインストールする 
+</span><span class="c1"></span>kubectl apply -n &lt;operator-namespace&gt; -f csv.yaml
+
+<span class="c1"># OperatorがOLMによってデプロイされることを確認
+</span><span class="c1"></span>$ kubectl get pods -n &lt;operator-namespace&gt;
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-5577cd4bb7-hjf8m   <span class="m">1</span>/1       Running   <span class="m">0</span>          2m</code></pre></td></tr></table>
+</div>
+</div>
+<p>さて、 OpenShiftの場合、v3.11からOLMの管理画面が付いているので、以下のように画面で動作を確認できます。</p>
+
+
+
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="/images/tomcat-operator-olm.png" />
+    </div>
+    <a href="/images/tomcat-operator-olm.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+
+<p>せっかくなので、管理画面からTomatをインストールしてみます。</p>
+
+<p>上記画面で、「Create Tomcat Server」を押下します。</p>
+
+<p>作成については、CRのYAMLを画面上でapplyできるだけですね。 <code>kubectl apply -f cr.yaml</code>に相当する操作です。</p>
+
+
+
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="/images/tomcat-create-cr-olm.png" />
+    </div>
+    <a href="/images/tomcat-create-cr-olm.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+
+<p>画面上でtomcatインスタンスの一覧が確認できます。</p>
+
+
+
+<div class="box" >
+  <figure  itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+    <div class="img">
+      <img itemprop="thumbnail" src="/images/tomcat-operator-instances.png" />
+    </div>
+    <a href="/images/tomcat-operator-instances.png" itemprop="contentUrl"></a>
+  </figure>
+</div>
+
+
+<p>コマンドラインからも、Tomcatが起動していることが確認できます。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-bash" data-lang="bash">$ kubectl get pods -n &lt;operator-namespace&gt;
+example-e1iz7hyn42auym80tr7vw4kmo-tomcat-796b9485d7-rmj95   <span class="m">2</span>/2       Running   <span class="m">0</span>          8m
+tomcat-operator-5577cd4bb7-hjf8m                            <span class="m">1</span>/1       Running   <span class="m">0</span>          19m</code></pre></td></tr></table>
+</div>
+</div>
+<h2 id="まとめ">まとめ</h2>
+
+<p>helmチャートがあれば、<code>Helm App Operator Kit</code>でOperatorを生成できます。</p>
+
+<p>Operatorによるサービスのインストール、設定は、エンドユーザーにとって<code>kubectl</code>で操作が完結する、複雑な設定が隠蔽されシンプルなCRで設定できるなどのメリットがあります。</p>
+
+<p>もし、今helmチャートで管理しているサービスがあるなら、Operator化を検討してはいかがでしょうか。</p>
+
+    </div>
+
+    
+    
+<div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">Author</span>
+    <span class="item-content">Masatoshi Hayashi</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">LastMod</span>
+    <span class="item-content">2018-11-07</span>
+  </p>
+  
+  <p class="copyright-item">
+    <span class="item-title">License</span>
+    <span class="item-content"><a rel="license noopener" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">CC BY-NC-ND 4.0</a></span>
+  </p>
+</div>
+
+    
+    
+
+    <footer class="post-footer">
+      <div class="post-tags">
+          <a href="https://literalice.com/tags/helm/">helm</a>
+          <a href="https://literalice.com/tags/operator/">operator</a>
+          <a href="https://literalice.com/tags/kubernetes/">kubernetes</a>
+          <a href="https://literalice.com/tags/openshift/">openshift</a>
+          
+        </div>
+
+      
+      <nav class="post-nav">
+        
+        
+          <a class="next" href="/post/jenkins-agent-openshift/">
+            <span class="next-text nav-default">OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する</span>
+            <span class="prev-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+
+  
+  
+
+  
+  
+
+  
+
+  
+
+  <div class="disqus-comment">
+  <div class="disqus-button" id="load_disqus" onclick="load_disqus()">
+    Show Disqus Comments
+  </div>
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+    var disqus_config = function () {
+      this.page.url = "https://literalice.com/post/easy-go-operators-helm/";
+    };
+    function load_disqus() {
+      
+      
+      if (window.location.hostname === 'localhost') return;
+
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      var disqus_shortname = 'literalice';
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+
+      $('#load_disqus').remove();
+    };
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+  </noscript>
+  
+  </div>
+
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:literalice@monochromeroad.com" rel="me noopener" class="iconfont icon-email"
+        title="email">
+      </a>
+      <a href="https://twitter.com/literalice" rel="me noopener" class="iconfont icon-twitter"
+        title="twitter" target="_blank">
+      </a>
+      <a href="https://github.com/literalice" rel="me noopener" class="iconfont icon-github"
+        title="github" target="_blank">
+      </a>
+  <a href="https://literalice.com/index.xml" rel="noopener alternate" type="application/rss&#43;xml" class="iconfont icon-rss"
+    title="rss" target="_blank">
+  </a>
+  </div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - <a class="theme-link" href="https://github.com/xianmin/hugo-theme-jane">Jane</a>
+  </span>
+
+  <span class="copyright-year">
+    &copy;
+    2018
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span><span class="author">
+        Masatoshi Hayashi
+        
+      </span></span>
+
+  
+  
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+<script type="text/javascript" src="/lib/jquery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout-1.0.1.min.js"></script>
+<script type="text/javascript" src="/dist/jane.min.js?v=2.7.0"></script>
+
+
+
+
+
+  
+    <script type="text/javascript" src="/js/load-photoswipe.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe.min.js"></script>
+    <script type="text/javascript" src="/lib/photoswipe/photoswipe-ui-default.min.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

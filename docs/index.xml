@@ -6,10 +6,393 @@
     <description>Recent content on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Tue, 16 Oct 2018 23:00:00 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 07 Nov 2018 10:14:03 +0900</lastBuildDate>
     
         <atom:link href="https://literalice.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Operatorの開発を身近にする技術 - Helm App Operator Kit</title>
+      <link>https://literalice.com/post/easy-go-operators-helm/</link>
+      <pubDate>Wed, 07 Nov 2018 10:14:03 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/easy-go-operators-helm/</guid>
+      
+        <description>
+
+
+&lt;link rel=&#34;stylesheet&#34; href=&#34;https://literalice.com/css/hugo-easy-gallery.css&#34; /&gt;
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://coreos.com/assets/images/operators/operator_logo_framework_color.svg&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://coreos.com/assets/images/operators/operator_logo_framework_color.svg&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;&lt;a href=&#34;https://coreos.com/operators/&#34;&gt;Operator Framework&lt;/a&gt;ではOperatorをGo言語で作ることになっていますが、まだまだGoはハードルが高い人もいるし、&lt;br /&gt;
+そもそも状態を常時管理する必要が無いようなステートレスなコンテナにいちいちイチからOperatorを作るのは面倒です。&lt;/p&gt;
+
+&lt;p&gt;Operator Framework自体がOperatorを簡単に実装できるようにするフレームワークではありますが、そういった要件を考慮してさらに開発を簡単にするラッパーが開発されています。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/operator-framework/helm-app-operator-kit&#34;&gt;Helm App Operator Kit&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md&#34;&gt;Ansible Operator&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;前者は、既存のhelmチャートをOperatorに変換するもの、後者はAnsibleでOperatorを作るものです。&lt;/p&gt;
+
+&lt;p&gt;この記事では、&lt;code&gt;Helm App Operator Kit&lt;/code&gt;を紹介します。&lt;/p&gt;
+
+&lt;h2 id=&#34;helm-app-operator-kit&#34;&gt;Helm App Operator Kit&lt;/h2&gt;
+
+&lt;p&gt;helmはKubernetesの世界で既に広く使われているパッケージマネージャーであり、多くのhelmチャートが作られています。&lt;/p&gt;
+
+&lt;p&gt;この資産、helmチャートからOperatorを作ることができれば便利そうですね。&lt;/p&gt;
+
+&lt;p&gt;helmチャートをOperator化することで、&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CustomResourceによる宣言的なインストール、アップデート、設定変更が可能&lt;/li&gt;
+&lt;li&gt;上記によりhelmコマンドやTillerをインストールすることなくkubectlでインストールやアップデートが完結する&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/operator-framework/operator-lifecycle-manager&#34;&gt;Operator Lifecyle Manager&lt;/a&gt;による管理対象にできる&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;といったメリットがあります。これを実現するのが&lt;a href=&#34;https://github.com/operator-framework/helm-app-operator-kit&#34;&gt;Helm App Operator Kit&lt;/a&gt;です。&lt;/p&gt;
+
+&lt;p&gt;公式ベージにTomcatのhelmチャートをOperator化する例があるので試してみたいと思います。&lt;/p&gt;
+
+&lt;h3 id=&#34;前提&#34;&gt;前提&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ローカルマシンにDockerがインストールされていること&lt;/li&gt;
+&lt;li&gt;QuayやDockerHubに自分で管理しているリポジトリがあること&lt;/li&gt;
+&lt;li&gt;kubectlコマンドで操作できるKubernetes環境があること&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;helm-app-operator-kitのダウンロード&#34;&gt;Helm App Operator Kitのダウンロード&lt;/h3&gt;
+
+&lt;p&gt;git cloneしてくるだけです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ git clone https://github.com/operator-framework/helm-app-operator-kit&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;helmチャートからoperatorのコンテナイメージをビルドする&#34;&gt;HelmチャートからOperatorのコンテナイメージをビルドする&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;Helm App Operator Kit&lt;/code&gt;では、build-argsにhelmチャートのtarballをURLで指定してdocker buildすることで、helmチャートをコンテナイメージに変換します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;13
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;14
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ &lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; helm-app-operator-kit/examples/tomcat-operator
+
+$ &lt;span class=&#34;nb&#34;&gt;export&lt;/span&gt; &lt;span class=&#34;nv&#34;&gt;IMAGE&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;quay.io/&amp;lt;namespace&amp;gt;/tomcat-operator:v0.0.1
+
+&lt;span class=&#34;c1&#34;&gt;# Operatorコンテナイメージをhelmチャートtomcat-0.1.0.tgzからビルド
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ docker build &lt;span class=&#34;se&#34;&gt;\
+&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt;  --build-arg &lt;span class=&#34;nv&#34;&gt;HELM_CHART&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;https://storage.googleapis.com/kubernetes-charts/tomcat-0.1.0.tgz &lt;span class=&#34;se&#34;&gt;\
+&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt;  --build-arg &lt;span class=&#34;nv&#34;&gt;API_VERSION&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;apache.org/v1alpha1 &lt;span class=&#34;se&#34;&gt;\
+&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt;  --build-arg &lt;span class=&#34;nv&#34;&gt;KIND&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;Tomcat &lt;span class=&#34;se&#34;&gt;\
+&lt;/span&gt;&lt;span class=&#34;se&#34;&gt;&lt;/span&gt;  -t &lt;span class=&#34;nv&#34;&gt;$IMAGE&lt;/span&gt; ../../
+
+&lt;span class=&#34;c1&#34;&gt;# コンテナレジストリにログイン
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ docker login -u&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;xxx&amp;#34;&lt;/span&gt; -p&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;xxx&amp;#34;&lt;/span&gt; quay.io
+$ docker push &lt;span class=&#34;nv&#34;&gt;$IMAGE&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;なお、Tomcatのhelmチャートは何故かHostPortを空けようとするのでOpenShift環境だと権限の関係でPodがデプロイされません。tarをダウンロードして、変更することで修正できます。
+以下に修正したものをアップロードしましたのでご使用ください。
+&lt;a href=&#34;https://s3-ap-northeast-1.amazonaws.com/literalice-helm-charts/tomcat-0.1.0.tgz&#34;&gt;https://s3-ap-northeast-1.amazonaws.com/literalice-helm-charts/tomcat-0.1.0.tgz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;これで、Operatorのコンテナイメージが作成されコンテナレジストリにPushされました。&lt;/p&gt;
+
+&lt;h3 id=&#34;operatorをインストールする&#34;&gt;Operatorをインストールする&lt;/h3&gt;
+
+&lt;p&gt;さて、今回作成したTomcat Operatorは、以下のようなCRが作成、変更、削除されたときにTomcatを指定通りにインストールしたりアンインストールします。&lt;/p&gt;
+
+&lt;p&gt;スキーマは、&lt;code&gt;docker build&lt;/code&gt;時に指定したKINDなどのパラメーターと、helmチャートの&lt;code&gt;values.yaml&lt;/code&gt;に従い決定されます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;apache.org/v1alpha1&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Tomcat&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;metadata&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;name&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;example-app&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;replicaCount&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;このCRをapplyすれば、TomcatがKubernetes上にプロビジョニングされるというわけですね。&lt;/p&gt;
+
+&lt;p&gt;このCRを作成するためには、まずCRDを作成しなければなりません。&lt;/p&gt;
+
+&lt;p&gt;サンプルのディレクトリには既に用意されているので、以下コマンドを適用するだけです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl apply -f crd.yaml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl apply -n &amp;lt;operator-namespace&amp;gt; -f rbac.yaml&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;次に、Operatorをインストールします。テンプレートが用意されているので、プレースホルダを先ほどビルドしたOperatorコンテナイメージに置換して使用します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ sed &lt;span class=&#34;s2&#34;&gt;&amp;#34;s|REPLACE_IMAGE|&lt;/span&gt;&lt;span class=&#34;nv&#34;&gt;$IMAGE&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;|&amp;#34;&lt;/span&gt; operator.yaml.template &amp;gt; operator.yaml
+$ kubectl apply -n &amp;lt;operator-namespace&amp;gt; -f operator.yaml
+$ kubectl get pods -n playground 
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-79c876b9fc-bc4rv   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          43s&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;operatorでtomcatをインストールする&#34;&gt;OperatorでTomcatをインストールする&lt;/h3&gt;
+
+&lt;p&gt;これで、Tomcatをインストールする準備ができました。&lt;/p&gt;
+
+&lt;p&gt;以下のようにCRを適用すると、OperatorがTomcatをインストールしてくれるはずです。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl apply -n &amp;lt;operator-namespace&amp;gt; -f cr.yaml
+$ kubectl get pods -n &amp;lt;operator-namespace&amp;gt;
+NAME                                                            READY     STATUS    RESTARTS   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-8c977   &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-zkz8r   &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m
+tomcat-operator-5f895b8db6-c96wp                                &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          4m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 id=&#34;operatorでtomcatのpodを変更する&#34;&gt;OperatorでTomcatのPodを変更する&lt;/h3&gt;
+
+&lt;p&gt;このTomcat PodはOperatorで管理されているので、対応するCRをeditすることで設定を変更できます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl get tomcat -n &amp;lt;operator-namespace&amp;gt;
+NAME          AGE
+example-app   5h
+
+$ kubectl edit tomcat example-app -n &amp;lt;operator-namespace&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;6
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;apiVersion&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;apache.org/v1alpha1&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;kind&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;Tomcat&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# ...&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;spec&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;  &lt;/span&gt;replicaCount&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# ここを1に変更する&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;
+&lt;/span&gt;&lt;span class=&#34;w&#34;&gt;&lt;/span&gt;&lt;span class=&#34;c&#34;&gt;# ...&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Tomcat Podのインスタンス数を確認してみます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;4
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl get deploy -n &amp;lt;operator-namespace&amp;gt;
+NAME                                           DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;         &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;         &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;            &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;           5h
+tomcat-operator                                &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;         &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;         &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;            &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;           5h&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;このように、Podが減少していることが分かります。&lt;/p&gt;
+
+&lt;p&gt;Tomcatをアンインストールするには、対応するCRを削除します。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl delete tomcat example-app -n &amp;lt;operator-namespace&amp;gt;
+
+$ kubectl get pods -n &amp;lt;operator-namespace&amp;gt; -w
+NAME                                                            READY     STATUS        RESTARTS   AGE
+example-app-dqbff6a9lkwr0us934kfcb9m8-tomcat-69797999bb-8c977   &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Terminating   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          17m
+tomcat-operator-5f895b8db6-c96wp                                &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running       &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          17m
+
+$ kubectl get pods -n &amp;lt;operator-namespace&amp;gt;
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-5f895b8db6-c96wp   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          18m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;kubectl delete tomcat&lt;/code&gt; 。すごく直観的で分かりやすいと思いませんか？&lt;/p&gt;
+
+&lt;h3 id=&#34;operator-lifecycle-manager-olm-でtomcat-operatorを管理する&#34;&gt;Operator Lifecycle Manager(OLM)でTomcat Operatorを管理する&lt;/h3&gt;
+
+&lt;p&gt;OLMをKubernetesにインストールしている場合は、Tomcat OperatorをOLMで管理することもできます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt; 1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;c1&#34;&gt;# インストールしたOperatorを削除する
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;kubectl delete -f operator.yaml -n &amp;lt;operator-namespace&amp;gt;
+kubectl delete -f rbac.yaml -n &amp;lt;operator-namespace&amp;gt;
+
+&lt;span class=&#34;c1&#34;&gt;# CSV(ClusterServiceVersion)をインストールする 
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;kubectl apply -n &amp;lt;operator-namespace&amp;gt; -f csv.yaml
+
+&lt;span class=&#34;c1&#34;&gt;# OperatorがOLMによってデプロイされることを確認
+&lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;$ kubectl get pods -n &amp;lt;operator-namespace&amp;gt;
+NAME                               READY     STATUS    RESTARTS   AGE
+tomcat-operator-5577cd4bb7-hjf8m   &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          2m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;さて、 OpenShiftの場合、v3.11からOLMの管理画面が付いているので、以下のように画面で動作を確認できます。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/tomcat-operator-olm.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/tomcat-operator-olm.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;せっかくなので、管理画面からTomatをインストールしてみます。&lt;/p&gt;
+
+&lt;p&gt;上記画面で、「Create Tomcat Server」を押下します。&lt;/p&gt;
+
+&lt;p&gt;作成については、CRのYAMLを画面上でapplyできるだけですね。 &lt;code&gt;kubectl apply -f cr.yaml&lt;/code&gt;に相当する操作です。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/tomcat-create-cr-olm.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/tomcat-create-cr-olm.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;画面上でtomcatインスタンスの一覧が確認できます。&lt;/p&gt;
+
+
+
+&lt;div class=&#34;box&#34; &gt;
+  &lt;figure  itemprop=&#34;associatedMedia&#34; itemscope itemtype=&#34;http://schema.org/ImageObject&#34;&gt;
+    &lt;div class=&#34;img&#34;&gt;
+      &lt;img itemprop=&#34;thumbnail&#34; src=&#34;https://literalice.com/images/tomcat-operator-instances.png&#34; /&gt;
+    &lt;/div&gt;
+    &lt;a href=&#34;https://literalice.com/images/tomcat-operator-instances.png&#34; itemprop=&#34;contentUrl&#34;&gt;&lt;/a&gt;
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+
+&lt;p&gt;コマンドラインからも、Tomcatが起動していることが確認できます。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
+&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2
+&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class=&#34;lntd&#34;&gt;
+&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;$ kubectl get pods -n &amp;lt;operator-namespace&amp;gt;
+example-e1iz7hyn42auym80tr7vw4kmo-tomcat-796b9485d7-rmj95   &lt;span class=&#34;m&#34;&gt;2&lt;/span&gt;/2       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          8m
+tomcat-operator-5577cd4bb7-hjf8m                            &lt;span class=&#34;m&#34;&gt;1&lt;/span&gt;/1       Running   &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt;          19m&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 id=&#34;まとめ&#34;&gt;まとめ&lt;/h2&gt;
+
+&lt;p&gt;helmチャートがあれば、&lt;code&gt;Helm App Operator Kit&lt;/code&gt;でOperatorを生成できます。&lt;/p&gt;
+
+&lt;p&gt;Operatorによるサービスのインストール、設定は、エンドユーザーにとって&lt;code&gt;kubectl&lt;/code&gt;で操作が完結する、複雑な設定が隠蔽されシンプルなCRで設定できるなどのメリットがあります。&lt;/p&gt;
+
+&lt;p&gt;もし、今helmチャートで管理しているサービスがあるなら、Operator化を検討してはいかがでしょうか。&lt;/p&gt;
+</description>
+      
+    </item>
     
     <item>
       <title>OpenShiftのJenkinsでカスタムしたコンテナをagentとして使用する</title>
