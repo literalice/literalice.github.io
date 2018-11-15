@@ -20,7 +20,7 @@
       
         <description>
 
-&lt;p&gt;OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっています。&lt;/p&gt;
+&lt;p&gt;OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっています。&lt;/p&gt;
 
 &lt;p&gt;従来のOpenShiftの場合、Kubernetesやノードなど基盤の異常を通知するために別製品を導入する必要がありましたが、v3.11から単独でクラスタの監視、通知ができるようになったわけですね。&lt;/p&gt;
 
@@ -28,7 +28,7 @@
 
 &lt;h2 id=&#34;openshiftのprometheus&#34;&gt;OpenShiftのPrometheus&lt;/h2&gt;
 
-&lt;p&gt;OpenShiftでは、Prometheus監視スタックは&lt;a href=&#34;https://github.com/openshift/cluster-monitoring-operator&#34;&gt;Cluster Monitornig Operator(CMO)&lt;/a&gt;というOperatorによりクラスタにインストールされ、Prometheus/Grafana/AlertManagerの連携が設定され保守されます。&lt;/p&gt;
+&lt;p&gt;OpenShiftでは、Prometheus監視スタックは&lt;a href=&#34;https://github.com/openshift/cluster-monitoring-operator&#34;&gt;Cluster Monitornig Operator(CMO)&lt;/a&gt;というOperatorによりクラスタにインストールされ、Prometheus/Grafana/Alertmanagerの連携が設定され保守されます。&lt;/p&gt;
 
 
 &lt;link rel=&#34;stylesheet&#34; href=&#34;https://literalice.com/css/hugo-easy-gallery.css&#34; /&gt;
@@ -117,7 +117,7 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 
-&lt;p&gt;最初からOpenShiftのAlertManagerに設定されているのは &lt;code&gt;DeadMansSwitch&lt;/code&gt;というアラートルールのみです。&lt;/p&gt;
+&lt;p&gt;最初からOpenShiftのAlertmanagerに設定されているのは &lt;code&gt;DeadMansSwitch&lt;/code&gt;というアラートルールのみです。&lt;/p&gt;
 
 &lt;p&gt;これは、何もなくてもトリガーされ続ける特別なアラートルールで、監視システム自体が死んでいないか監視するために使われるものです。&lt;/p&gt;
 
@@ -127,7 +127,7 @@
 
 &lt;p&gt;OpenShiftの監視ルール自体はまだ変更できませんが、通知方法(Slack、メール、PagerDuty、etc..)は任意にカスタマイズ可能です。&lt;/p&gt;
 
-&lt;p&gt;OpenShiftのドキュメントには&lt;a href=&#34;https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager&#34;&gt;Ansibleの変数で設定&lt;/a&gt;してPlaybookを実行するとありますが、AlertManagerの設定は&lt;code&gt;openshift-monitornig&lt;/code&gt;プロジェクトの&lt;code&gt;Secrets&lt;/code&gt;に入っているのでこれを変更すればよさそうです。&lt;/p&gt;
+&lt;p&gt;OpenShiftのドキュメントには&lt;a href=&#34;https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager&#34;&gt;Ansibleの変数で設定&lt;/a&gt;してPlaybookを実行するとありますが、Alertmanagerの設定は&lt;code&gt;openshift-monitornig&lt;/code&gt;プロジェクトの&lt;code&gt;Secrets&lt;/code&gt;に入っているのでこれを変更すればよさそうです。&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://github.com/openshift/cluster-monitoring-operator/blob/master/Documentation/user-guides/configuring-prometheus-alertmanager.md&#34;&gt;https://github.com/openshift/cluster-monitoring-operator/blob/master/Documentation/user-guides/configuring-prometheus-alertmanager.md&lt;/a&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
@@ -305,7 +305,7 @@ $ oc get secret alertmanager-main -ojson &lt;span class=&#34;p&#34;&gt;|&lt;/spa
 &lt;/span&gt;&lt;span class=&#34;w&#34;&gt;    &lt;/span&gt;auth_password&lt;span class=&#34;p&#34;&gt;:&lt;/span&gt;&lt;span class=&#34;w&#34;&gt; &lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;xxxx&amp;#34;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;さて、この設定をOpenShiftのAlertManagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の&lt;code&gt;Secret&lt;/code&gt;を置き換えます。&lt;/p&gt;
+&lt;p&gt;さて、この設定をOpenShiftのAlertmanagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の&lt;code&gt;Secret&lt;/code&gt;を置き換えます。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
 &lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
 &lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;lnt&#34;&gt;1
@@ -425,7 +425,7 @@ router-2-c27g5                        &lt;span class=&#34;m&#34;&gt;1&lt;/span&g
 &lt;p&gt;簡単にOpenShiftクラスタの監視項目と通知の設定を見てきました。&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;Prometheus&lt;/code&gt;と&lt;code&gt;AlertManager&lt;/code&gt;というデファクトスタンダードなプロジェクトを利用できる&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Prometheus&lt;/code&gt;と&lt;code&gt;Alertmanager&lt;/code&gt;というデファクトスタンダードなプロジェクトを利用できる&lt;/li&gt;
 &lt;li&gt;設定済みの豊富な監視項目から任意に選択して簡単に通知を飛ばしてもらうことができる&lt;/li&gt;
 &lt;li&gt;通知方法をカスタマイズできる&lt;/li&gt;
 &lt;/ul&gt;

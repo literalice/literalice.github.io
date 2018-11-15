@@ -17,7 +17,7 @@
       <pubDate>Thu, 15 Nov 2018 11:25:32 +0900</pubDate>
       
       <guid>https://literalice.com/post/openshift-prometheus-alert/</guid>
-      <description>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ</description>
+      <description>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっ</description>
     </item>
     
   </channel>

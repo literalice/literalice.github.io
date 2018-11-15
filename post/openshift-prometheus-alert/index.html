@@ -23,7 +23,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <meta name="author" content="Masatoshi Hayashi" />
-  <meta name="description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ" />
+  <meta name="description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっ" />
 
   <meta name="keywords" content="Technology" />
 
@@ -70,13 +70,13 @@
 
 
 <meta property="og:title" content="OpenShiftのPrometheusスタックでクラスタの異常をメールやPagerDutyで通知する" />
-<meta property="og:description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ" />
+<meta property="og:description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっ" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://literalice.com/post/openshift-prometheus-alert/" /><meta property="article:published_time" content="2018-11-15T11:25:32&#43;09:00"/>
 <meta property="article:modified_time" content="2018-11-15T11:25:32&#43;09:00"/>
 
 <meta itemprop="name" content="OpenShiftのPrometheusスタックでクラスタの異常をメールやPagerDutyで通知する">
-<meta itemprop="description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ">
+<meta itemprop="description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっ">
 
 
 <meta itemprop="datePublished" content="2018-11-15T11:25:32&#43;09:00" />
@@ -88,7 +88,7 @@
 <meta itemprop="keywords" content="openshift,monitoring,prometheus," />
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="OpenShiftのPrometheusスタックでクラスタの異常をメールやPagerDutyで通知する"/>
-<meta name="twitter:description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ"/>
+<meta name="twitter:description" content="OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっ"/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -400,7 +400,7 @@ if (!doNotTrack) {
     <div class="post-content">
       
 
-<p>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっています。</p>
+<p>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっています。</p>
 
 <p>従来のOpenShiftの場合、Kubernetesやノードなど基盤の異常を通知するために別製品を導入する必要がありましたが、v3.11から単独でクラスタの監視、通知ができるようになったわけですね。</p>
 
@@ -408,7 +408,7 @@ if (!doNotTrack) {
 
 <h2 id="openshiftのprometheus">OpenShiftのPrometheus</h2>
 
-<p>OpenShiftでは、Prometheus監視スタックは<a href="https://github.com/openshift/cluster-monitoring-operator">Cluster Monitornig Operator(CMO)</a>というOperatorによりクラスタにインストールされ、Prometheus/Grafana/AlertManagerの連携が設定され保守されます。</p>
+<p>OpenShiftでは、Prometheus監視スタックは<a href="https://github.com/openshift/cluster-monitoring-operator">Cluster Monitornig Operator(CMO)</a>というOperatorによりクラスタにインストールされ、Prometheus/Grafana/Alertmanagerの連携が設定され保守されます。</p>
 
 
 <link rel="stylesheet" href="/css/hugo-easy-gallery.css" />
@@ -497,7 +497,7 @@ if (!doNotTrack) {
 </tbody>
 </table>
 
-<p>最初からOpenShiftのAlertManagerに設定されているのは <code>DeadMansSwitch</code>というアラートルールのみです。</p>
+<p>最初からOpenShiftのAlertmanagerに設定されているのは <code>DeadMansSwitch</code>というアラートルールのみです。</p>
 
 <p>これは、何もなくてもトリガーされ続ける特別なアラートルールで、監視システム自体が死んでいないか監視するために使われるものです。</p>
 
@@ -507,7 +507,7 @@ if (!doNotTrack) {
 
 <p>OpenShiftの監視ルール自体はまだ変更できませんが、通知方法(Slack、メール、PagerDuty、etc..)は任意にカスタマイズ可能です。</p>
 
-<p>OpenShiftのドキュメントには<a href="https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager">Ansibleの変数で設定</a>してPlaybookを実行するとありますが、AlertManagerの設定は<code>openshift-monitornig</code>プロジェクトの<code>Secrets</code>に入っているのでこれを変更すればよさそうです。</p>
+<p>OpenShiftのドキュメントには<a href="https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager">Ansibleの変数で設定</a>してPlaybookを実行するとありますが、Alertmanagerの設定は<code>openshift-monitornig</code>プロジェクトの<code>Secrets</code>に入っているのでこれを変更すればよさそうです。</p>
 
 <p><a href="https://github.com/openshift/cluster-monitoring-operator/blob/master/Documentation/user-guides/configuring-prometheus-alertmanager.md">https://github.com/openshift/cluster-monitoring-operator/blob/master/Documentation/user-guides/configuring-prometheus-alertmanager.md</a></p>
 <div class="highlight"><div class="chroma">
@@ -685,7 +685,7 @@ $ oc get secret alertmanager-main -ojson <span class="p">|</span> jq -r <span cl
 </span><span class="w">    </span>auth_password<span class="p">:</span><span class="w"> </span><span class="s2">&#34;xxxx&#34;</span></code></pre></td></tr></table>
 </div>
 </div>
-<p>さて、この設定をOpenShiftのAlertManagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の<code>Secret</code>を置き換えます。</p>
+<p>さて、この設定をOpenShiftのAlertmanagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の<code>Secret</code>を置き換えます。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre class="chroma"><code class="language-bash" data-lang="bash"><span class="lnt">1
@@ -805,7 +805,7 @@ router-2-c27g5                        <span class="m">1</span>/1       Running  
 <p>簡単にOpenShiftクラスタの監視項目と通知の設定を見てきました。</p>
 
 <ul>
-<li><code>Prometheus</code>と<code>AlertManager</code>というデファクトスタンダードなプロジェクトを利用できる</li>
+<li><code>Prometheus</code>と<code>Alertmanager</code>というデファクトスタンダードなプロジェクトを利用できる</li>
 <li>設定済みの豊富な監視項目から任意に選択して簡単に通知を飛ばしてもらうことができる</li>
 <li>通知方法をカスタマイズできる</li>
 </ul>
