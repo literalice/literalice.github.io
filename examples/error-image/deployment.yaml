@@ -1,0 +1,19 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+namespace: default
+metadata:
+  labels:
+    app: error-app
+  name: error-app
+spec:
+  replicas: 1
+  selector:
+    app: error-app
+  template:
+    metadata:
+      labels:
+        app: error-app
+    spec:
+      containers:
+      - image: quay.io/literalice/error-image:latest
+        name: error-app
