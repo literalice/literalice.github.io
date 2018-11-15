@@ -6,7 +6,7 @@ categories: ["Technology"]
 tags: ["openshift", "monitoring", "prometheus"]
 ---
 
-OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっています。
+OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/Alertmanager)がGAとなっています。
 
 従来のOpenShiftの場合、Kubernetesやノードなど基盤の異常を通知するために別製品を導入する必要がありましたが、v3.11から単独でクラスタの監視、通知ができるようになったわけですね。
 
@@ -14,7 +14,7 @@ OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheu
 
 ## OpenShiftのPrometheus
 
-OpenShiftでは、Prometheus監視スタックは[Cluster Monitornig Operator(CMO)](https://github.com/openshift/cluster-monitoring-operator)というOperatorによりクラスタにインストールされ、Prometheus/Grafana/AlertManagerの連携が設定され保守されます。
+OpenShiftでは、Prometheus監視スタックは[Cluster Monitornig Operator(CMO)](https://github.com/openshift/cluster-monitoring-operator)というOperatorによりクラスタにインストールされ、Prometheus/Grafana/Alertmanagerの連携が設定され保守されます。
 
 {{< figure src="/images/openshift-cmo-arch.png" >}}
 
@@ -38,7 +38,7 @@ https://docs.openshift.com/container-platform/3.11/install_config/prometheus_clu
 | KubeletTooManyPods              | warning  | Kubeletが動かしているPod数が多すぎる                         |
 | DeadMansSwitch                  | none     | 常に送り続けるアラート(後述)                                 |
 
-最初からOpenShiftのAlertManagerに設定されているのは `DeadMansSwitch`というアラートルールのみです。
+最初からOpenShiftのAlertmanagerに設定されているのは `DeadMansSwitch`というアラートルールのみです。
 
 これは、何もなくてもトリガーされ続ける特別なアラートルールで、監視システム自体が死んでいないか監視するために使われるものです。
 
@@ -48,7 +48,7 @@ https://docs.openshift.com/container-platform/3.11/install_config/prometheus_clu
 
 OpenShiftの監視ルール自体はまだ変更できませんが、通知方法(Slack、メール、PagerDuty、etc..)は任意にカスタマイズ可能です。
 
-OpenShiftのドキュメントには[Ansibleの変数で設定](https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager)してPlaybookを実行するとありますが、AlertManagerの設定は`openshift-monitornig`プロジェクトの`Secrets`に入っているのでこれを変更すればよさそうです。
+OpenShiftのドキュメントには[Ansibleの変数で設定](https://docs.openshift.com/container-platform/3.11/install_config/prometheus_cluster_monitoring.html#configuring-alertmanager)してPlaybookを実行するとありますが、Alertmanagerの設定は`openshift-monitornig`プロジェクトの`Secrets`に入っているのでこれを変更すればよさそうです。
 
 https://github.com/openshift/cluster-monitoring-operator/blob/master/Documentation/user-guides/configuring-prometheus-alertmanager.md
 
@@ -147,7 +147,7 @@ receivers:
     auth_password: "xxxx"
 ```
 
-さて、この設定をOpenShiftのAlertManagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の`Secret`を置き換えます。
+さて、この設定をOpenShiftのAlertmanagerに反映しましょう。このyamlファイルを任意の名前で保存して、以下コマンドで元の`Secret`を置き換えます。
 
 ```bash
 oc project openshift-monitoring
@@ -215,7 +215,7 @@ router-2-c27g5                        1/1       Running            0          10
 
 簡単にOpenShiftクラスタの監視項目と通知の設定を見てきました。
 
-* `Prometheus`と`AlertManager`というデファクトスタンダードなプロジェクトを利用できる
+* `Prometheus`と`Alertmanager`というデファクトスタンダードなプロジェクトを利用できる
 * 設定済みの豊富な監視項目から任意に選択して簡単に通知を飛ばしてもらうことができる
 * 通知方法をカスタマイズできる
 
