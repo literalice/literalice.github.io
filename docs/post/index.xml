@@ -6,10 +6,19 @@
     <description>Recent content in Posts on literalice</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Wed, 07 Nov 2018 10:14:03 +0900</lastBuildDate>
+    <lastBuildDate>Thu, 15 Nov 2018 11:25:32 +0900</lastBuildDate>
     
 	<atom:link href="https://literalice.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenShiftのPrometheusスタックでクラスタの異常をメールやPagerDutyで通知する</title>
+      <link>https://literalice.com/post/openshift-prometheus-alert/</link>
+      <pubDate>Thu, 15 Nov 2018 11:25:32 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/openshift-prometheus-alert/</guid>
+      <description>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ</description>
+    </item>
     
     <item>
       <title>Operatorの開発を身近にする技術 - Helm App Operator Kit</title>

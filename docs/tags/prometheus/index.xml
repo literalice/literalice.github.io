@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Prometheus on literalice</title>
+    <link>https://literalice.com/tags/prometheus/</link>
+    <description>Recent content in Prometheus on literalice</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Thu, 15 Nov 2018 11:25:32 +0900</lastBuildDate>
+    
+	<atom:link href="https://literalice.com/tags/prometheus/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>OpenShiftのPrometheusスタックでクラスタの異常をメールやPagerDutyで通知する</title>
+      <link>https://literalice.com/post/openshift-prometheus-alert/</link>
+      <pubDate>Thu, 15 Nov 2018 11:25:32 +0900</pubDate>
+      
+      <guid>https://literalice.com/post/openshift-prometheus-alert/</guid>
+      <description>OpenShift v3.11から、Prometheusを中心とした監視スタック(Prometheus/Grafana/AlertManager)がGAとなっ</description>
+    </item>
+    
+  </channel>
+</rss>
